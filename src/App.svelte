@@ -10,7 +10,7 @@
 	let textValue = '';
 	let minHour = 9;
 	let maxHour = 22;
-	let minMeetingLengthMinutes = 30;
+	let minMeetingLengthMin = 30;
 	let minTimeBlockMin = 15;
 
 	// Test texts
@@ -74,10 +74,22 @@
 		return sharedCalendar;
 	};
 
-	// Take a list of availableTime dictionaries and returns a sorted list of shared available time windows at least minMeetingLengthMinutes long
-	function showTopNTimes(allUserTimes, N) {
-		sharedTimes = {};
+	// Take a sharedCalendar and returns a sorted list of the top N shared available time windows at least minMeetingLengthMin long
+	function getTopNTimes(allUserTimes, N) {
+		// create full calendar of time blocks for each user
 
+		// init intervalList
+		// first set of users for first interval = {}
+
+
+		// for each timeblock:
+			// if >= 1 user and set of users is different than set of users from previous interval
+			// start interval and run getFullInterval(startBlock, set of users), which keeps iterating through those specific user calendars until shared time block ends
+				// add the interval with num people and list of users to intervalList
+
+		// sort intervalList by num people 
+
+		// return first N intervals from intervalList
 	};
 
 
@@ -177,7 +189,7 @@
 	let available3 = processText(text3);
 	let allUserTimes = [{user: 'user1', availableTimes: available1}, {user: 'user2', availableTimes: available2}, {user: 'user3', availableTimes: available3}];
 	createSharedCalendar(allUserTimes);
-	
+
 </script>
 
 <main>
