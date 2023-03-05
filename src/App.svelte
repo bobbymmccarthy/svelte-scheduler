@@ -10,14 +10,13 @@
 	let textValue = '';
 	let minHour = 9;
 	let maxHour = 22;
-	let availableTimes = {};
-	for (let i = 0; i < 7; i++) {
-		availableTimes[i] = [];
-	}
+	let minMeetingLengthMinutes = 30;
+	let minTimeBlockMin = 15;
 
-	// Testing with:
-	// monday 9-10am, 11-1pm, 5:30-6:30pm, 7:30-8:30pm, tuesday all day, wednesday except 2-3pm and 4-5pm, thursday 9-7pm
-	
+	// Test texts
+	let text1 = "monday 9-10am, 11-1pm, 5:30-6:30pm, 7:30-8:30pm, tuesday all day, wednesday except 2-3pm and 4-5pm, thursday 9-7pm";
+	let text2 = "monday 10:30am-5pm, tuesday 9am-1pm, wednesday 2:30pm-3:30pm, thursday all day";
+	let text3 = "monday 10:30am-5pm, tuesday 9am-1pm, wednesday 2:45pm-3:30pm, thursday all day";
 
 	// Refine parser for larger hour before smaller hour
 	// E.g. 11-2pm = 11am-2pm
@@ -25,7 +24,6 @@
 	    refine: (context, results) => {
 	        results.forEach((result) => {
 	        	if ('start' in result && 'end' in result && result.end != null && result.start.get('hour') > result.end.get('hour')) {
-	        		console.log('changing meridiem');
 	            	result.start.assign('meridiem', 0);
 	            	result.start.assign('hour', result.start.get('hour') % 12);
 	            	result.end.assign('meridiem', 1);
@@ -36,14 +34,55 @@
 	    }
 	});
 
+	// Take a list of [{user, availableTimes}, ...] and returns a single sharedCalendar dictionary of the form {day: {'hour-min': ["user1", "user2", ...], ...}, ...}
+	// the key for 9am would be '9-0', for 9:15am would be '9-15', for 9pm woul be '22-0'
+	function createSharedCalendar(allUserTimes) {
+
+		let sharedCalendar = {};
+		for (let d = 0; d < 7; d++) {
+			sharedCalendar[d] = {}
+			for (let h = minHour; h < maxHour; h++) {
+				for (let m = 0; m < 60; m+=15) {
+					sharedCalendar[d][h+'-'+m] = []
+				};
+			};
+		};
+
+		allUserTimes.forEach(obj => {
+			let user = obj['user'];
+			let availableTimes = obj['availableTimes'];
+			for (const [day, availableBlocks] of Object.entries(availableTimes)) {
+			  availableBlocks.forEach(block => {
+			  	let startHour = block[0].getHours();
+			  	let endHour = block[1].getHours();
+
+			  	for (let h = startHour; h <= endHour; h++) {
+
+			  		let startMin = (h != startHour) ? 0 : block[0].getMinutes();
+			  		let endMin = (h != endHour) ? 60 : block[1].getMinutes();
+
+			  		for (let m = startMin; m < endMin; m+=15) {
+			  			sharedCalendar[day][h+'-'+m].push(user);
+			  		};
+			  	};
+
+			  });
+			};
+		});
+
+		console.log(sharedCalendar);
+		return sharedCalendar;
+	};
+
+	// Take a list of availableTime dictionaries and returns a sorted list of shared available time windows at least minMeetingLengthMinutes long
 	function showTopNTimes(allUserTimes, N) {
+		sharedTimes = {};
 
 	};
 
-	function handleInput() {
 
-		let text = textValue;
-
+	// Takes text and processes it into a dictionary of available times for each day of the week: {0: [[sun-datetimestart1, sun-datetimeend1], [sun-datetimestart2, sun-datetimeend2]], 1: [], ... 6: []}
+	function processText(text) {
 		text = text.toLowerCase();
 		text = text.replace(';', ':');
 
@@ -56,7 +95,8 @@
 		// Split lines
 		let lines = text.split('\n');
 
-		// Reset available times
+		// Set empty available times
+		let availableTimes = {};
 		for (let i = 0; i < 7; i++) {
 			availableTimes[i] = [];
 		};
@@ -106,10 +146,9 @@
 			// e.g. Monday except 2-3pm
 
 			if (busyIndicator.test(line)) {
-				console.log(parsed);
-				let weekday = parsed[i].start.date().getDay();
+				let weekday = parsed[0].start.date().getDay();
 
-				let date = parsed[i].start.date();
+				let date = parsed[0].start.date();
 				let startHourDate = new Date(date.getYear(), date.getMonth(), date.getDay(), minHour);
 				let endHourDate;
 				for (let i = 0; i < availableTimes[weekday].length; i++) {
@@ -117,15 +156,28 @@
 					availableTimes[weekday][i][0] = startHourDate;
 					startHourDate = availableTimes[weekday][i][1];
 					availableTimes[weekday][i][1] = endHourDate;
-				}
+				};
 
 				endHourDate = new Date(date.getYear(), date.getMonth(), date.getDay(), maxHour);
 				availableTimes[weekday].push([startHourDate, endHourDate]);
 			};
-			console.log(availableTimes);
-			return availableTimes;
-		}
+		};
+		console.log(availableTimes);
+		return availableTimes;
 	};
+
+	function handleInput() {
+		let text = textValue;
+		return processText(text);
+	};
+
+	// Testing
+	let available1 = processText(text1);
+	let available2 = processText(text2);
+	let available3 = processText(text3);
+	let allUserTimes = [{user: 'user1', availableTimes: available1}, {user: 'user2', availableTimes: available2}, {user: 'user3', availableTimes: available3}];
+	createSharedCalendar(allUserTimes);
+	
 </script>
 
 <main>
