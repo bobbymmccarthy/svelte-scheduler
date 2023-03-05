@@ -163,25 +163,27 @@
 
 		console.log('shared intervals');
 		console.log(sharedIntervals);
-		let sharedIntervalsSorted = sharedIntervals.sort(function(a, b) { 
-		    let numUserDiff = a['users'].length - b['users'].length;
-		    if (numUserDiff == 0) {
-		    	if (a['start']['d'] < b['start']['d']) {
-		    		return 1;
-		    	}
-		    	else if (a['start']['h'] < b['start']['h']) {
-		    		return 1;
-		    	}
-		    	else if (a['start']['m'] < b['start']['m']) {
-		    		return 1;
-		    	}
-		    	return -1;
+
+		sharedIntervals.sort((a, b) => { 
+		    let numUserDiff = b['users'].size - a['users'].size;
+		    if (numUserDiff != 0) {
+		    	console.log('diff number!');
+		    	return numUserDiff;
 		    }
-		    return numUserDiff;
+		    else if (a['start']['d'] - b['start']['d'] != 0) {
+		    	return a['start']['d'] - b['start']['d'];
+		    }
+		    else if (a['start']['h'] - b['start']['h'] != 0) {
+		    	return a['start']['h'] - b['start']['h'];
+		    }
+		    else {
+		    	return a['start']['m'] - b['start']['m'];
+		    };
+		    return 0;
 		});
 
-		console.log(sharedIntervalsSorted.slice(0, N));
-		return sharedIntervalsSorted.slice(0, N);
+		console.log(sharedIntervals.slice(0, N));
+		return sharedIntervals.slice(0, N);
 	};
 
 
@@ -281,7 +283,7 @@
 	let available3 = processText(text3);
 	let allUserTimes = [{user: 'user1', availableTimes: available1}, {user: 'user2', availableTimes: available2}, {user: 'user3', availableTimes: available3}];
 	createSharedCalendar(allUserTimes);
-	getTopNTimes(allUserTimes, 5);
+	getTopNTimes(allUserTimes, 10);
 
 </script>
 
