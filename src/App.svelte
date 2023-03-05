@@ -8,10 +8,10 @@
 	const customChrono = chrono.casual.clone();
 	
 	let textValue = '';
-	let minHour = 9;
-	let maxHour = 22;
-	let minMeetingLengthMin = 30;
-	let minTimeBlockMin = 15;
+	let MIN_HOUR = 9;
+	let MAX_HOUR = 22;
+	let MIN_MEETING_LENGTH_MIN = 30;
+	let MIN_TIMEBLOCK_MIN = 15;
 
 	// Test texts
 	let text1 = "monday 9-10am, 11-1pm, 5:30-6:30pm, 7:30-8:30pm, tuesday all day, wednesday except 2-3pm and 4-5pm, thursday 9-7pm";
@@ -34,19 +34,24 @@
 	    }
 	});
 
+	function createEmptyCalendar() {
+		let calendar = {}
+		for (let d = 0; d < 7; d++) {
+			calendar[d] = {}
+			for (let h = MIN_HOUR; h < MAX_HOUR; h++) {
+				for (let m = 0; m < 60; m+=15) {
+					calendar[d][h+'-'+m] = []
+				};
+			};
+		};
+		return calendar;
+	};
+
 	// Take a list of [{user, availableTimes}, ...] and returns a single sharedCalendar dictionary of the form {day: {'hour-min': ["user1", "user2", ...], ...}, ...}
 	// the key for 9am would be '9-0', for 9:15am would be '9-15', for 9pm woul be '22-0'
 	function createSharedCalendar(allUserTimes) {
 
-		let sharedCalendar = {};
-		for (let d = 0; d < 7; d++) {
-			sharedCalendar[d] = {}
-			for (let h = minHour; h < maxHour; h++) {
-				for (let m = 0; m < 60; m+=15) {
-					sharedCalendar[d][h+'-'+m] = []
-				};
-			};
-		};
+		let sharedCalendar = createEmptyCalendar();
 
 		allUserTimes.forEach(obj => {
 			let user = obj['user'];
@@ -74,22 +79,109 @@
 		return sharedCalendar;
 	};
 
+	function createCalendarFromAvailableTimes(user, availableTimes) {
+		let calendar = createEmptyCalendar();
+
+		for (const [day, availableBlocks] of Object.entries(availableTimes)) {
+			availableBlocks.forEach(block => {
+				let startHour = block[0].getHours();
+				let endHour = block[1].getHours();
+
+				for (let h = startHour; h <= endHour; h++) {
+
+					let startMin = (h != startHour) ? 0 : block[0].getMinutes();
+					let endMin = (h != endHour) ? 60 : block[1].getMinutes();
+
+					for (let m = startMin; m < endMin; m+=15) {
+						calendar[day][h+'-'+m].push(user);
+					};
+				};
+			});
+		};
+
+		return calendar;
+	};
+
+	// Set equality from https://stackoverflow.com/questions/31128855/comparing-ecma6-sets-for-equality
+	const eqSet = (xs, ys) =>
+    xs.size === ys.size &&
+    [...xs].every((x) => ys.has(x));
+
+    function isSuperset(set, subset) {
+	  for (const elem of subset) {
+	    if (!set.has(elem)) {
+	      return false;
+	    }
+	  }
+	  return true;
+	};
+
 	// Take a sharedCalendar and returns a sorted list of the top N shared available time windows at least minMeetingLengthMin long
 	function getTopNTimes(allUserTimes, N) {
-		// create full calendar of time blocks for each user
 
-		// init intervalList
-		// first set of users for first interval = {}
+		let sharedCalendar = createSharedCalendar(allUserTimes);
+		
+		console.log('here');
 
+		let sharedIntervals = [];
+		let ongoingIntervals = new Set();
+		let prevUserSet = new Set();
 
-		// for each timeblock:
-			// if >= 1 user and set of users is different than set of users from previous interval
-			// start interval and run getFullInterval(startBlock, set of users), which keeps iterating through those specific user calendars until shared time block ends
-				// add the interval with num people and list of users to intervalList
+		for (let d = 0; d < 7; d++) {
+			for (let h = MIN_HOUR; h <= MAX_HOUR; h++) {
+				for (let m = 0; m < 60; m+=15) {
+					let userSet = new Set(sharedCalendar[d][h+'-'+m]);
 
-		// sort intervalList by num people 
+					// Test if interval is keeping track of a new set of users not already being covered
+					let newUserSet = userSet.size >= 1;
+					if (newUserSet) {
+						ongoingIntervals.forEach(i => {
+							if (eqSet(sharedIntervals[i]['users'], userSet)) {
+								newUserSet = false;
+							};
+						});
+					};
 
-		// return first N intervals from intervalList
+					// If this is a new set of users not being covered, create an interval
+					if (newUserSet) {
+						ongoingIntervals.add(sharedIntervals.length);	
+						sharedIntervals.push({users: userSet, start: [d, h, m], end: []});
+					};
+
+					console.log(ongoingIntervals);
+					console.log(sharedIntervals);
+					ongoingIntervals.forEach(i => {
+						if (!isSuperset(userSet, sharedIntervals[i].users)) {
+							sharedIntervals[i]['end'] = [d, h, m];
+							ongoingIntervals.delete(i);
+						};
+					});
+					prevUserSet = userSet;
+				};
+			};
+		};
+
+		console.log('shared intervals');
+		console.log(sharedIntervals);
+		let sharedIntervalsSorted = sharedIntervals.sort(function(a, b) { 
+		    let numUserDiff = a['users'].length - b['users'].length;
+		    if (numUserDiff == 0) {
+		    	if (a['start']['d'] < b['start']['d']) {
+		    		return 1;
+		    	}
+		    	else if (a['start']['h'] < b['start']['h']) {
+		    		return 1;
+		    	}
+		    	else if (a['start']['m'] < b['start']['m']) {
+		    		return 1;
+		    	}
+		    	return -1;
+		    }
+		    return numUserDiff;
+		});
+
+		console.log(sharedIntervalsSorted.slice(0, N));
+		return sharedIntervalsSorted.slice(0, N);
 	};
 
 
@@ -125,7 +217,7 @@
 				parsed = chrono.parse(line, undefined, { forwardDate: true });
 				if (parsed.length > 0) {
 					let date = parsed[0].start.date();
-					availableTimes[parsed[0].start.get('weekday')] = [[new Date(date.getYear(), date.getMonth(), date.getDay(), minHour), new Date(date.getYear(), date.getMonth(), date.getDay(), maxHour)]];
+					availableTimes[parsed[0].start.get('weekday')] = [[new Date(date.getYear(), date.getMonth(), date.getDay(), MIN_HOUR), new Date(date.getYear(), date.getMonth(), date.getDay(), MAX_HOUR)]];
 				};
 			}
 
@@ -161,7 +253,7 @@
 				let weekday = parsed[0].start.date().getDay();
 
 				let date = parsed[0].start.date();
-				let startHourDate = new Date(date.getYear(), date.getMonth(), date.getDay(), minHour);
+				let startHourDate = new Date(date.getYear(), date.getMonth(), date.getDay(), MIN_HOUR);
 				let endHourDate;
 				for (let i = 0; i < availableTimes[weekday].length; i++) {
 					endHourDate = availableTimes[weekday][i][0];
@@ -170,7 +262,7 @@
 					availableTimes[weekday][i][1] = endHourDate;
 				};
 
-				endHourDate = new Date(date.getYear(), date.getMonth(), date.getDay(), maxHour);
+				endHourDate = new Date(date.getYear(), date.getMonth(), date.getDay(), MAX_HOUR);
 				availableTimes[weekday].push([startHourDate, endHourDate]);
 			};
 		};
@@ -189,6 +281,7 @@
 	let available3 = processText(text3);
 	let allUserTimes = [{user: 'user1', availableTimes: available1}, {user: 'user2', availableTimes: available2}, {user: 'user3', availableTimes: available3}];
 	createSharedCalendar(allUserTimes);
+	getTopNTimes(allUserTimes, 5);
 
 </script>
 
