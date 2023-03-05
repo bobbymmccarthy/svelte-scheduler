@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "chrono-node": "^2.5.0",
+    "rollup-plugin-terser": "^7.0.2",
     "sirv-cli": "^2.0.0"
   }
 }

@@ -1,7 +1,9 @@
 <script>
-	export let name;
+	import VoiceRecognition from './components/VoiceRecognition.svelte'
 
 	import * as chrono from 'chrono-node';
+
+	let voice = '';
 
 	const shortHandDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 	const dayRegex = /mon|tue|wed|thu|fri|sat|sun/;
@@ -121,7 +123,6 @@
 
 		let sharedCalendar = createSharedCalendar(allUserTimes);
 		
-		console.log('here');
 
 		let sharedIntervals = [];
 		let ongoingIntervals = new Set();
@@ -161,8 +162,6 @@
 			};
 		};
 
-		console.log('shared intervals');
-		console.log(sharedIntervals);
 
 		sharedIntervals.sort((a, b) => { 
 		    let numUserDiff = b['users'].size - a['users'].size;
@@ -182,7 +181,6 @@
 		    return 0;
 		});
 
-		console.log(sharedIntervals.slice(0, N));
 		return sharedIntervals.slice(0, N);
 	};
 
@@ -285,9 +283,12 @@
 	createSharedCalendar(allUserTimes);
 	getTopNTimes(allUserTimes, 10);
 
+	console.log(pro)
 </script>
 
 <main>
+	<VoiceRecognition bind:noteContent = {voice}/>
+	<p>from Binding: {voice}</p>
 	<h1>Hello</h1>
 	<h2>When are you available to meet?</h2>
 	<br>
