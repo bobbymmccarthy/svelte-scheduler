@@ -37,7 +37,7 @@
     <tr>
         {#each hour as day, j}
         <!-- If table[i][j] is true then the block is green-->
-        <td class:available = {day} on:click = {() => modifyAvail(i,j)}></td>
+        <td class:available = {day} }></td>
         {/each}
     </tr>
     {/each}
