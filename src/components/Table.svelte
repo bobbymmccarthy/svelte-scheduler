@@ -20,6 +20,7 @@
       padding-right: 20px;
       padding-top: 10px;
       padding-bottom: 10px;
+      min-width: 40px;
     }
     .available {
       background-color: green;
