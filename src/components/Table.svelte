@@ -1,6 +1,6 @@
 <script>
  export let timeArr;
- let dayArr = ['Monday', "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+ const dayArr = ['Monday', "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
  function modifyAvail(i, j){
     timeArr[i][j] = !timeArr[i][j];
   }

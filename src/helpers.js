@@ -40,33 +40,34 @@ function createEmptyCalendar() {
 
 // Take a list of [{user, availableTimes}, ...] and returns a single sharedCalendar dictionary of the form {day: {'hour-min': ["user1", "user2", ...], ...}, ...}
 // the key for 9am would be '9-0', for 9:15am would be '9-15', for 9pm woul be '22-0'
-function createSharedCalendar(allUserTimes) {
+function createSharedCalendar(userTimes) {
 
 	let sharedCalendar = createEmptyCalendar();
 
-	allUserTimes.forEach(obj => {
-		let user = obj['user'];
-		let availableTimes = obj['availableTimes'];
-		for (const [day, availableBlocks] of Object.entries(availableTimes)) {
-		  availableBlocks.forEach(block => {
-		  	let startHour = block[0].getHours();
-		  	let endHour = block[1].getHours();
+	userTimes.forEach(obj => {
+		if (obj) {
+			let user = obj['name'];
+			let availableTimes = obj['availableTimes'];
+			for (const [day, availableBlocks] of Object.entries(availableTimes)) {
+			  availableBlocks.forEach(block => {
+			  	let startHour = (new Date(block[0])).getHours();
+			  	let endHour = (new Date(block[1])).getHours();
 
-		  	for (let h = startHour; h <= endHour; h++) {
+			  	for (let h = startHour; h <= endHour; h++) {
 
-		  		let startMin = (h != startHour) ? 0 : block[0].getMinutes();
-		  		let endMin = (h != endHour) ? 60 : block[1].getMinutes();
+			  		let startMin = (h != startHour) ? 0 : (new Date(block[0])).getMinutes();
+			  		let endMin = (h != endHour) ? 60 : (new Date(block[1])).getMinutes();
 
-		  		for (let m = startMin; m < endMin; m+=15) {
-		  			sharedCalendar[day][h+'-'+m].push(user);
-		  		};
-		  	};
+			  		for (let m = startMin; m < endMin; m+=15) {
+			  			sharedCalendar[day][h+'-'+m].push(user);
+			  		};
+			  	};
 
-		  });
-		};
+			  });
+			};
+		}
 	});
 
-	console.log(sharedCalendar);
 	return sharedCalendar;
 };
 
@@ -107,10 +108,10 @@ function isSuperset(set, subset) {
   return true;
 };
 
-// Take a sharedCalendar and returns a sorted list of the top N shared available time windows at least minMeetingLengthMin long
-function getTopNTimes(allUserTimes, N) {
+// Take userTimes and returns a sorted list of the top N shared available time windows at least minMeetingLengthMin long
+function getTopNIntervals(userTimes, N) {
 
-	let sharedCalendar = createSharedCalendar(allUserTimes);
+	let sharedCalendar = createSharedCalendar(userTimes);
 	
 
 	let sharedIntervals = [];
@@ -138,8 +139,6 @@ function getTopNTimes(allUserTimes, N) {
 					sharedIntervals.push({users: userSet, start: [d, h, m], end: []});
 				};
 
-				console.log(ongoingIntervals);
-				console.log(sharedIntervals);
 				ongoingIntervals.forEach(i => {
 					if (!isSuperset(userSet, sharedIntervals[i].users)) {
 						sharedIntervals[i]['end'] = [d, h, m];
@@ -155,7 +154,6 @@ function getTopNTimes(allUserTimes, N) {
 	sharedIntervals.sort((a, b) => { 
 	    let numUserDiff = b['users'].size - a['users'].size;
 	    if (numUserDiff != 0) {
-	    	console.log('diff number!');
 	    	return numUserDiff;
 	    }
 	    else if (a['start']['d'] - b['start']['d'] != 0) {
@@ -260,4 +258,4 @@ function processText(text) {
 	return availableTimes;
 };
 
-export {processText, createSharedCalendar, getTopNTimes};
+export {processText, createSharedCalendar, getTopNIntervals};

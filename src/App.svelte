@@ -1,12 +1,37 @@
 <script>
 	import VoiceRecognition from './components/VoiceRecognition.svelte'
-	import {processText} from './helpers.js';
+	import {processText, getTopNIntervals} from './helpers.js';
 	import Table from './components/Table.svelte'
+	const dayArr = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 	let name = '';
 	let text = '';
 	let availableTimes = null;
-	let timeArr = Array(13 * 4).fill(0).map(() => Array(7).fill(0));
+
+	// If you want to reset database, uncomment this line and run app
+	// localStorage.clear();
+
+	let topIntervals = getTopNIntervals(getAllUserTimes(), 5);
+	console.log(topIntervals);
+	let topTimesText = topTimesToText(topIntervals);
+
+	function topTimesToText(topIntervals) {
+		let topTimesText = [];
+		topIntervals.forEach((interval) => {
+			let day = interval['start'][0];
+			let startMin = interval['start'][2];
+			let startTime = interval['start'][1] + ':' + (startMin == 0 ? '00' : startMin.toString());
+			let endMin = interval['end'][2];
+			let endTime = interval['end'][1] + ':' + (endMin == 0 ? '00' : endMin.toString());
+			let numUsers = interval['users'].size;
+			let users = Array.from(interval['users']).join(' ')
+
+			topTimesText.push({day: day, startTime: startTime, endTime: endTime, numUsers: numUsers, users: users})
+		});
+		return topTimesText;
+	};
+
+	// let timeArr = Array(13 * 4).fill(0).map(() => Array(7).fill(0));
 
 	function handleInput() {
 		availableTimes = processText(text);
@@ -16,15 +41,24 @@
 		const userID = localStorage.length;
 		let userData = {id: userID, name: name, availableTimes: availableTimes};
 		localStorage.setItem(userID, JSON.stringify(userData));
-		getAllUserTimes();
+		topTimes = getTopNIntervals(getAllUserTimes(), 5);
 	};
 
 	function getAllUserTimes() {
+		console.log('hi')
 		let userTimes = [];
 		for (let i = 0; i < localStorage.length; i++) {
 	      	userTimes.push(JSON.parse(localStorage.getItem(i)));
         };
-        console.log(userTimes)
+
+        console.log('here');
+        // For some reason there is a null value at the start. Remove it.
+        let index = userTimes.indexOf(null);
+		if (index > -1) {
+			userTimes.splice(index, 1);
+		}
+
+		console.log(userTimes);
         return userTimes;
 	};
 
@@ -48,7 +82,18 @@ fri except 3-4pm and 5-6pm
 	<br><br>
 	<input class="submit" type="button" value="Submit" on:click={submit}>
 	<br><br>
-	<Table timeArr = {timeArr}></Table>
+	<h2>Top Times</h2>
+	{#each topTimesText as time}
+		<p>
+			<b>{dayArr[time.day]} {time.startTime} - {time.endTime}</b>
+			<br>
+			{time.numUsers} people ({time.users})
+		</p>
+		<br>
+	{/each}
+
+
+	<!-- <Table timeArr = {timeArr}></Table> -->
 	</main>
 
 <style>
