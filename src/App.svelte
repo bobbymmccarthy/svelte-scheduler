@@ -44,6 +44,7 @@
 		localStorage.setItem(userID, JSON.stringify(userData));
 		topTimesText = topTimesToText(getTopNIntervals(getAllUserTimes(), 5));
 		name = '';
+		text = '';
 	};
 
 	function getAllUserTimes() {
@@ -83,11 +84,14 @@ fri except 3-4pm and 5-6pm
 		<div class="top-times-side">
 			<h2>Top Times</h2>
 			{#each topTimesText as time}
-				<p>
-					<b>{dayArr[time.day]} {time.startTime} - {time.endTime}</b>
-					<br>
-					{time.numUsers} people ({time.users})
-				</p>
+				<div class = 'top-time'>
+					<p>
+						<b>{dayArr[time.day]} {time.startTime} - {time.endTime}</b>
+						<br>
+						<u>{time.numUsers} people</u><br>
+						({time.users})
+					</p>
+				</div>
 				<br>
 			{/each}
 		</div>
@@ -141,6 +145,10 @@ fri except 3-4pm and 5-6pm
 		_display: inline;
 		width: 100%;
 		background-color: #f4f4f4;
+	}
+
+	.top-time {
+		margin: 0% 10%;
 	}
 
 	@media screen and (min-width: 30em) {
