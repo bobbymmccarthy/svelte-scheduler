@@ -194,11 +194,12 @@ function processText(text) {
 		availableTimes[i] = [];
 	};
 
+	const fullAvailability =/all day|anytime|any time|whenever/
+	const busyIndicator = /except|besides|apart/
+
 	for (let i = 0; i < lines.length; i++) {
 		let line = lines[i];
 		let parsed = null;
-		const fullAvailability =/all day|anytime|any time|whenever/
-		const busyIndicator = /except|besides|apart/
 
 		// If a full day is mentioned
 		// e.g. Monday all day

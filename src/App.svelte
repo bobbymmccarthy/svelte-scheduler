@@ -1,17 +1,9 @@
 <script>
 	import VoiceRecognition from './components/VoiceRecognition.svelte'
 	import {processText} from './helpers.js';
-	let voiceText = '';
-	let typedText = '';
-
-
-	// Test texts
-	let text1 = "monday 9-10am, 11-1pm, 5:30-6:30pm, 7:30-8:30pm, tuesday all day, wednesday except 2-3pm and 4-5pm, thursday 9-7pm";
-	let text2 = "monday 10:30am-5pm, tuesday 9am-1pm, wednesday 2:30pm-3:30pm, thursday all day";
-	let text3 = "monday 10:30am-5pm, tuesday 9am-1pm, wednesday 2:45pm-3:30pm, thursday all day";
+	let text = '';
 
 	function handleInput() {
-		let text = typedText;
 		return processText(text);
 	};
 </script>
@@ -19,9 +11,12 @@
 <main>
 	<h1>Group Scheduler</h1>
 	<h2>When are you available to meet?</h2>
-	<VoiceRecognition bind:noteContent = {voiceText}/>
+	<p><b>Voice Record</b> or <b>Type</b> your availablilty.<br>
+	  Start with the <u>day of the week</u> followed by the <i>times</i>.<br>
+	For example: "I'm free <u>Monday</u> <i>9am-10am</i> and <i>11am-12pm</i>, <u>Tuesday</u> <i>except 3-4pm</i>, ..."</p>
+	<VoiceRecognition bind:noteContent = {text}/>
 	<br>
-	<textarea bind:value={voiceText} on:input={handleInput} placeholder="mon 9-10am, 2-3:45pm
+	<textarea bind:value={text} on:input={handleInput} placeholder="mon 9-10am, 2-3:45pm
 wed all day,
 thurs except 1-2pm,
 fri except 3-4pm and 5-6pm
@@ -39,7 +34,7 @@ fri except 3-4pm and 5-6pm
 	h1 {
 		color: #ff3e00;
 		text-transform: uppercase;
-		font-size: 4em;
+		font-size: 2em;
 		font-weight: 100;
 	}
 
