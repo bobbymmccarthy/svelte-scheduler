@@ -48,7 +48,8 @@ function createSharedCalendar(userTimes) {
 		if (obj) {
 			let user = obj['name'];
 			let availableTimes = obj['availableTimes'];
-			for (const [day, availableBlocks] of Object.entries(availableTimes)) {
+			if (availableTimes) {
+				for (const [day, availableBlocks] of Object.entries(availableTimes)) {
 			  availableBlocks.forEach(block => {
 			  	let startHour = (new Date(block[0])).getHours();
 			  	let endHour = (new Date(block[1])).getHours();
@@ -65,7 +66,8 @@ function createSharedCalendar(userTimes) {
 
 			  });
 			};
-		}
+			};
+		};
 	});
 
 	return sharedCalendar;

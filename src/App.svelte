@@ -24,7 +24,7 @@
 			let endMin = interval['end'][2];
 			let endTime = interval['end'][1] + ':' + (endMin == 0 ? '00' : endMin.toString());
 			let numUsers = interval['users'].size;
-			let users = Array.from(interval['users']).join(' ')
+			let users = Array.from(interval['users']).join(', ')
 
 			topTimesText.push({day: day, startTime: startTime, endTime: endTime, numUsers: numUsers, users: users})
 		});
@@ -38,10 +38,11 @@
 	};
 
 	function submit() {
+		availableTimes = processText(text);
 		const userID = localStorage.length;
 		let userData = {id: userID, name: name, availableTimes: availableTimes};
 		localStorage.setItem(userID, JSON.stringify(userData));
-		topTimes = getTopNIntervals(getAllUserTimes(), 5);
+		topTimesText = topTimesToText(getTopNIntervals(getAllUserTimes(), 5));
 	};
 
 	function getAllUserTimes() {
