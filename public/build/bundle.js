@@ -481,7 +481,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Recording...";
-    			add_location(p, file$2, 31, 6, 863);
+    			add_location(p, file$2, 31, 6, 914);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -524,8 +524,10 @@ var app = (function () {
     			button1.textContent = "RESET";
     			t3 = space();
     			if (if_block) if_block.c();
+    			attr_dev(button0, "border", "2px solid black");
+    			attr_dev(button0, "background-color", "orange");
     			add_location(button0, file$2, 27, 4, 614);
-    			add_location(button1, file$2, 28, 4, 704);
+    			add_location(button1, file$2, 28, 4, 755);
     			add_location(div, file$2, 26, 0, 604);
     		},
     		l: function claim(nodes) {
@@ -10557,7 +10559,8 @@ var app = (function () {
     		if (obj) {
     			let user = obj['name'];
     			let availableTimes = obj['availableTimes'];
-    			for (const [day, availableBlocks] of Object.entries(availableTimes)) {
+    			if (availableTimes) {
+    				for (const [day, availableBlocks] of Object.entries(availableTimes)) {
     			  availableBlocks.forEach(block => {
     			  	let startHour = (new Date(block[0])).getHours();
     			  	let endHour = (new Date(block[1])).getHours();
@@ -10571,8 +10574,7 @@ var app = (function () {
     			  			sharedCalendar[day][h+'-'+m].push(user);
     			  		}			  	}
     			  });
-    			}		}
-    	});
+    			}			}		}	});
 
     	return sharedCalendar;
     }
@@ -11324,11 +11326,11 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (86:1) {#each topTimesText as time}
+    // (85:3) {#each topTimesText as time}
     function create_each_block(ctx) {
     	let p;
     	let b;
-    	let t0_value = /*dayArr*/ ctx[2][/*time*/ ctx[11].day] + "";
+    	let t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[11].day] + "";
     	let t0;
     	let t1;
     	let t2_value = /*time*/ ctx[11].startTime + "";
@@ -11366,10 +11368,10 @@ var app = (function () {
     			t10 = text(")");
     			t11 = space();
     			br1 = element("br");
-    			add_location(b, file, 87, 3, 2837);
-    			add_location(br0, file, 88, 3, 2900);
-    			add_location(p, file, 86, 2, 2830);
-    			add_location(br1, file, 91, 2, 2955);
+    			add_location(b, file, 86, 5, 2818);
+    			add_location(br0, file, 87, 5, 2883);
+    			add_location(p, file, 85, 4, 2809);
+    			add_location(br1, file, 90, 4, 2944);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -11389,7 +11391,13 @@ var app = (function () {
     			insert_dev(target, t11, anchor);
     			insert_dev(target, br1, anchor);
     		},
-    		p: noop,
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*topTimesText*/ 4 && t0_value !== (t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[11].day] + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*topTimesText*/ 4 && t2_value !== (t2_value = /*time*/ ctx[11].startTime + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*topTimesText*/ 4 && t4_value !== (t4_value = /*time*/ ctx[11].endTime + "")) set_data_dev(t4, t4_value);
+    			if (dirty & /*topTimesText*/ 4 && t7_value !== (t7_value = /*time*/ ctx[11].numUsers + "")) set_data_dev(t7, t7_value);
+    			if (dirty & /*topTimesText*/ 4 && t9_value !== (t9_value = /*time*/ ctx[11].users + "")) set_data_dev(t9, t9_value);
+    		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(p);
     			if (detaching) detach_dev(t11);
@@ -11401,7 +11409,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(86:1) {#each topTimesText as time}",
+    		source: "(85:3) {#each topTimesText as time}",
     		ctx
     	});
 
@@ -11412,6 +11420,8 @@ var app = (function () {
     	let main;
     	let h1;
     	let t1;
+    	let article;
+    	let div0;
     	let h20;
     	let t3;
     	let input0;
@@ -11458,8 +11468,8 @@ var app = (function () {
     	let input1;
     	let t34;
     	let br5;
-    	let br6;
     	let t35;
+    	let div1;
     	let h22;
     	let t37;
     	let current;
@@ -11482,7 +11492,7 @@ var app = (function () {
     		});
 
     	binding_callbacks.push(() => bind(voicerecognition, 'noteContent', voicerecognition_noteContent_binding));
-    	let each_value = /*topTimesText*/ ctx[3];
+    	let each_value = /*topTimesText*/ ctx[2];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -11494,8 +11504,10 @@ var app = (function () {
     		c: function create() {
     			main = element("main");
     			h1 = element("h1");
-    			h1.textContent = "Group Scheduler";
+    			h1.textContent = "Speech 'n' Text Scheduler 🎤💻";
     			t1 = space();
+    			article = element("article");
+    			div0 = element("div");
     			h20 = element("h2");
     			h20.textContent = "Name?";
     			t3 = space();
@@ -11552,8 +11564,8 @@ var app = (function () {
     			input1 = element("input");
     			t34 = space();
     			br5 = element("br");
-    			br6 = element("br");
     			t35 = space();
+    			div1 = element("div");
     			h22 = element("h2");
     			h22.textContent = "Top Times";
     			t37 = space();
@@ -11562,39 +11574,44 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			attr_dev(h1, "class", "svelte-ez0qfl");
-    			add_location(h1, file, 67, 1, 2075);
-    			add_location(h20, file, 68, 1, 2101);
-    			add_location(input0, file, 69, 1, 2117);
-    			add_location(h21, file, 70, 1, 2144);
-    			add_location(b0, file, 71, 5, 2190);
-    			add_location(b1, file, 71, 28, 2213);
-    			add_location(h4, file, 71, 1, 2186);
-    			add_location(u0, file, 72, 19, 2268);
-    			add_location(i0, file, 72, 58, 2307);
-    			add_location(br0, file, 72, 71, 2320);
-    			add_location(br1, file, 73, 1, 2326);
-    			add_location(u1, file, 73, 31, 2356);
-    			add_location(i1, file, 73, 45, 2370);
-    			add_location(i2, file, 73, 65, 2390);
-    			add_location(u2, file, 73, 83, 2408);
-    			add_location(i3, file, 73, 98, 2423);
-    			add_location(p, file, 72, 1, 2250);
-    			add_location(br2, file, 75, 1, 2519);
+    			attr_dev(h1, "class", "svelte-1bhlskc");
+    			add_location(h1, file, 61, 1, 1923);
+    			add_location(h20, file, 64, 3, 2015);
+    			add_location(input0, file, 65, 3, 2033);
+    			add_location(h21, file, 66, 3, 2062);
+    			add_location(b0, file, 67, 7, 2110);
+    			add_location(b1, file, 67, 30, 2133);
+    			add_location(h4, file, 67, 3, 2106);
+    			add_location(u0, file, 68, 21, 2190);
+    			add_location(i0, file, 68, 60, 2229);
+    			add_location(br0, file, 68, 73, 2242);
+    			add_location(br1, file, 69, 3, 2250);
+    			add_location(u1, file, 69, 33, 2280);
+    			add_location(i1, file, 69, 47, 2294);
+    			add_location(i2, file, 69, 67, 2314);
+    			add_location(u2, file, 69, 85, 2332);
+    			add_location(i3, file, 69, 100, 2347);
+    			add_location(p, file, 68, 3, 2172);
+    			add_location(br2, file, 71, 3, 2447);
     			attr_dev(textarea, "placeholder", "mon 9-10am, 2-3:45pm\nwed all day,\nthurs except 1-2pm,\nfri except 3-4pm and 5-6pm\n...");
-    			attr_dev(textarea, "class", "svelte-ez0qfl");
-    			add_location(textarea, file, 76, 1, 2525);
-    			add_location(br3, file, 81, 1, 2688);
-    			add_location(br4, file, 81, 5, 2692);
-    			attr_dev(input1, "class", "submit svelte-ez0qfl");
+    			attr_dev(textarea, "class", "svelte-1bhlskc");
+    			add_location(textarea, file, 72, 3, 2455);
+    			add_location(br3, file, 77, 3, 2620);
+    			add_location(br4, file, 77, 7, 2624);
+    			attr_dev(input1, "class", "submit svelte-1bhlskc");
     			attr_dev(input1, "type", "button");
     			input1.value = "Submit";
-    			add_location(input1, file, 82, 1, 2698);
-    			add_location(br5, file, 83, 1, 2769);
-    			add_location(br6, file, 83, 5, 2773);
-    			add_location(h22, file, 84, 1, 2779);
-    			attr_dev(main, "class", "svelte-ez0qfl");
-    			add_location(main, file, 66, 0, 2067);
+    			add_location(input1, file, 78, 3, 2632);
+    			add_location(br5, file, 79, 3, 2705);
+    			attr_dev(div0, "class", "input-side svelte-1bhlskc");
+    			add_location(div0, file, 63, 2, 1987);
+    			add_location(h22, file, 83, 3, 2754);
+    			attr_dev(div1, "class", "top-times-side svelte-1bhlskc");
+    			add_location(div1, file, 82, 2, 2722);
+    			attr_dev(article, "class", "cf svelte-1bhlskc");
+    			add_location(article, file, 62, 1, 1964);
+    			attr_dev(main, "class", "svelte-1bhlskc");
+    			add_location(main, file, 60, 0, 1915);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -11603,20 +11620,22 @@ var app = (function () {
     			insert_dev(target, main, anchor);
     			append_dev(main, h1);
     			append_dev(main, t1);
-    			append_dev(main, h20);
-    			append_dev(main, t3);
-    			append_dev(main, input0);
+    			append_dev(main, article);
+    			append_dev(article, div0);
+    			append_dev(div0, h20);
+    			append_dev(div0, t3);
+    			append_dev(div0, input0);
     			set_input_value(input0, /*name*/ ctx[0]);
-    			append_dev(main, t4);
-    			append_dev(main, h21);
-    			append_dev(main, t6);
-    			append_dev(main, h4);
+    			append_dev(div0, t4);
+    			append_dev(div0, h21);
+    			append_dev(div0, t6);
+    			append_dev(div0, h4);
     			append_dev(h4, b0);
     			append_dev(h4, t8);
     			append_dev(h4, b1);
     			append_dev(h4, t10);
-    			append_dev(main, t11);
-    			append_dev(main, p);
+    			append_dev(div0, t11);
+    			append_dev(div0, p);
     			append_dev(p, t12);
     			append_dev(p, u0);
     			append_dev(p, t14);
@@ -11636,27 +11655,27 @@ var app = (function () {
     			append_dev(p, t26);
     			append_dev(p, i3);
     			append_dev(p, t28);
-    			append_dev(main, t29);
-    			mount_component(voicerecognition, main, null);
-    			append_dev(main, t30);
-    			append_dev(main, br2);
-    			append_dev(main, t31);
-    			append_dev(main, textarea);
+    			append_dev(div0, t29);
+    			mount_component(voicerecognition, div0, null);
+    			append_dev(div0, t30);
+    			append_dev(div0, br2);
+    			append_dev(div0, t31);
+    			append_dev(div0, textarea);
     			set_input_value(textarea, /*text*/ ctx[1]);
-    			append_dev(main, t32);
-    			append_dev(main, br3);
-    			append_dev(main, br4);
-    			append_dev(main, t33);
-    			append_dev(main, input1);
-    			append_dev(main, t34);
-    			append_dev(main, br5);
-    			append_dev(main, br6);
-    			append_dev(main, t35);
-    			append_dev(main, h22);
-    			append_dev(main, t37);
+    			append_dev(div0, t32);
+    			append_dev(div0, br3);
+    			append_dev(div0, br4);
+    			append_dev(div0, t33);
+    			append_dev(div0, input1);
+    			append_dev(div0, t34);
+    			append_dev(div0, br5);
+    			append_dev(article, t35);
+    			append_dev(article, div1);
+    			append_dev(div1, h22);
+    			append_dev(div1, t37);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(main, null);
+    				each_blocks[i].m(div1, null);
     			}
 
     			current = true;
@@ -11692,7 +11711,7 @@ var app = (function () {
     			}
 
     			if (dirty & /*topTimesText, dayArr*/ 12) {
-    				each_value = /*topTimesText*/ ctx[3];
+    				each_value = /*topTimesText*/ ctx[2];
     				validate_each_argument(each_value);
     				let i;
 
@@ -11704,7 +11723,7 @@ var app = (function () {
     					} else {
     						each_blocks[i] = create_each_block(child_ctx);
     						each_blocks[i].c();
-    						each_blocks[i].m(main, null);
+    						each_blocks[i].m(div1, null);
     					}
     				}
 
@@ -11754,7 +11773,7 @@ var app = (function () {
     		let endMin = interval['end'][2];
     		let endTime = interval['end'][1] + ':' + (endMin == 0 ? '00' : endMin.toString());
     		let numUsers = interval['users'].size;
-    		let users = Array.from(interval['users']).join(' ');
+    		let users = Array.from(interval['users']).join(', ');
     		topTimesText.push({ day, startTime, endTime, numUsers, users });
     	});
 
@@ -11762,21 +11781,11 @@ var app = (function () {
     }
 
     function getAllUserTimes() {
-    	console.log('hi');
     	let userTimes = [];
 
     	for (let i = 0; i < localStorage.length; i++) {
     		userTimes.push(JSON.parse(localStorage.getItem(i)));
     	}
-    	console.log('here');
-
-    	// For some reason there is a null value at the start. Remove it.
-    	let index = userTimes.indexOf(null);
-
-    	if (index > -1) {
-    		userTimes.splice(index, 1);
-    	}
-
     	console.log(userTimes);
     	return userTimes;
     }
@@ -11802,10 +11811,12 @@ var app = (function () {
     	}
 
     	function submit() {
+    		availableTimes = processText(text);
     		const userID = localStorage.length;
     		let userData = { id: userID, name, availableTimes };
     		localStorage.setItem(userID, JSON.stringify(userData));
-    		topTimes = getTopNIntervals(getAllUserTimes(), 5);
+    		$$invalidate(2, topTimesText = topTimesToText(getTopNIntervals(getAllUserTimes(), 5)));
+    		$$invalidate(0, name = '');
     	}
     	const writable_props = [];
 
@@ -11850,7 +11861,7 @@ var app = (function () {
     		if ('text' in $$props) $$invalidate(1, text = $$props.text);
     		if ('availableTimes' in $$props) availableTimes = $$props.availableTimes;
     		if ('topIntervals' in $$props) topIntervals = $$props.topIntervals;
-    		if ('topTimesText' in $$props) $$invalidate(3, topTimesText = $$props.topTimesText);
+    		if ('topTimesText' in $$props) $$invalidate(2, topTimesText = $$props.topTimesText);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -11860,8 +11871,8 @@ var app = (function () {
     	return [
     		name,
     		text,
-    		dayArr,
     		topTimesText,
+    		dayArr,
     		handleInput,
     		submit,
     		input0_input_handler,
