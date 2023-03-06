@@ -38,8 +38,6 @@
       speech.pitch = 1;
       window.speechSynthesis.speak(speech);
     }
-
-
  
     /** Component Handlers**/
     function recorderHandler(event) {
@@ -77,18 +75,17 @@
       let data = event.detail.content;
       readOutLoud(data);
     }
-   
-    
-    
-  
   </script>
   
   
   {#if support}
+    <p><b>Voice Record</b> or <b>Type</b> your availablilty.<br>
+      Start with the <u>day of the week</u> followed by the <i>times</i>.<br>
+    For example: "I'm free <u>Monday</u> <i>9am-10am</i> and <i>11am-12pm</i>, <u>Tuesday</u> <i>except 3-4pm</i>, ..."</p>
     <!--Recorder Start-->
     <Recorder on:recorderHandler={recorderHandler}/>
     <!--Recorder End-->
-    <p> Press Record to log your availablilty and say it in the form "I'm free Monday 9 a.m. to 5 p.m"</p>
+
     <!-- {#each Object.entries(processTimes(noteContent)) as [day, arr]}
     <p>{day}, {arr}</p>
     {/each} -->
