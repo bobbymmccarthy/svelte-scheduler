@@ -2,19 +2,6 @@
 	import VoiceRecognition from './components/VoiceRecognition.svelte'
 	
 
-	import * as chrono from 'chrono-node';
-
-	let voice = '';
-
-	const shortHandDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-	const dayRegex = /mon|tue|wed|thu|fri|sat|sun/;
-	const customChrono = chrono.casual.clone();
-	
-	let textValue = '';
-	let MIN_HOUR = 9;
-	let MAX_HOUR = 22;
-	let MIN_MEETING_LENGTH_MIN = 30;
-	let MIN_TIMEBLOCK_MIN = 15;
 
 	// Test texts
 	let text1 = "monday 9-10am, 11-1pm, 5:30-6:30pm, 7:30-8:30pm, tuesday all day, wednesday except 2-3pm and 4-5pm, thursday 9-7pm";
@@ -267,7 +254,7 @@
 	};
 
 	function handleInput() {
-		let text = textValue;
+		let text = typedText;
 		return processText(text);
 	};
 
@@ -307,9 +294,10 @@
 	<h2>When are you available to meet?</h2>
 	
 	<br>
-	<textarea bind:value={textValue} on:input={handleInput} placeholder="tues before 2pm,
+	<textarea bind:value={voiceText} on:input={handleInput} placeholder="mon 9-10am, 2-3:45pm
 wed all day,
-thurs 1-2pm, 4-4:30pm,
+thurs except 1-2pm,
+fri except 3-4pm and 5-6pm
 ..."></textarea>
 	</main>
 
