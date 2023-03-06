@@ -43,21 +43,14 @@
 		let userData = {id: userID, name: name, availableTimes: availableTimes};
 		localStorage.setItem(userID, JSON.stringify(userData));
 		topTimesText = topTimesToText(getTopNIntervals(getAllUserTimes(), 5));
+		name = '';
 	};
 
 	function getAllUserTimes() {
-		console.log('hi')
 		let userTimes = [];
 		for (let i = 0; i < localStorage.length; i++) {
 	      	userTimes.push(JSON.parse(localStorage.getItem(i)));
         };
-
-        console.log('here');
-        // For some reason there is a null value at the start. Remove it.
-        let index = userTimes.indexOf(null);
-		if (index > -1) {
-			userTimes.splice(index, 1);
-		}
 
 		console.log(userTimes);
         return userTimes;
@@ -66,32 +59,39 @@
 </script>
 
 <main>
-	<h1>Group Scheduler</h1>
-	<h2>Name?</h2>
-	<input bind:value={name}>
-	<h2>When are you available to meet?</h2>
-	<h4><b>Voice Record</b> or <b>Type</b> your availablilty.</h4>
-	<p>Start with the <u>day of the week</u> followed by the <i>times</i>.<br>
-	<br>For example, I'm free... "<u>Monday</u> <i>9am-10am</i> and <i>11am-12pm</i>, <u>Tuesday</u> <i>except 3-4pm</i>, ..."</p>
-	<VoiceRecognition bind:noteContent = {text}></VoiceRecognition>
-	<br>
-	<textarea bind:value={text} on:input={handleInput} placeholder="mon 9-10am, 2-3:45pm
+	<h1>Speech 'n' Text Scheduler 🎤💻</h1>
+	<article class="cf">
+		<div class="input-side">
+			<h2>Name?</h2>
+			<input bind:value={name}>
+			<h2>When are you available to meet?</h2>
+			<h4><b>Voice Record</b> or <b>Type</b> your availablilty.</h4>
+			<p>Start with the <u>day of the week</u> followed by the <i>times</i>.<br>
+			<br>For example, I'm free... "<u>Monday</u> <i>9am-10am</i> and <i>11am-12pm</i>, <u>Tuesday</u> <i>except 3-4pm</i>, ..."</p>
+			<VoiceRecognition bind:noteContent = {text}></VoiceRecognition>
+			<br>
+			<textarea bind:value={text} on:input={handleInput} placeholder="mon 9-10am, 2-3:45pm
 wed all day,
 thurs except 1-2pm,
 fri except 3-4pm and 5-6pm
 ..."></textarea>
-	<br><br>
-	<input class="submit" type="button" value="Submit" on:click={submit}>
-	<br><br>
-	<h2>Top Times</h2>
-	{#each topTimesText as time}
-		<p>
-			<b>{dayArr[time.day]} {time.startTime} - {time.endTime}</b>
+			<br><br>
+			<input class="submit" type="button" value="Submit" on:click={submit}>
 			<br>
-			{time.numUsers} people ({time.users})
-		</p>
-		<br>
-	{/each}
+		</div>
+
+		<div class="top-times-side">
+			<h2>Top Times</h2>
+			{#each topTimesText as time}
+				<p>
+					<b>{dayArr[time.day]} {time.startTime} - {time.endTime}</b>
+					<br>
+					{time.numUsers} people ({time.users})
+				</p>
+				<br>
+			{/each}
+		</div>
+	</article>
 
 
 	<!-- <Table timeArr = {timeArr}></Table> -->
@@ -108,7 +108,6 @@ fri except 3-4pm and 5-6pm
 
 	h1 {
 		color: #ff3e00;
-		text-transform: uppercase;
 		font-size: 2em;
 		font-weight: 100;
 	}
@@ -120,12 +119,50 @@ fri except 3-4pm and 5-6pm
 	}
 
 	textarea {
-		height: 200px;
+		height: 150px;
 		width: 350px;
 		padding-bottom: 150px;
 	}
 
 	.submit {
-		font-size: 1.5em;
+		font-size: 1.7em;
 	}
+
+
+	.input-side {
+		float: left;
+    	_display: inline;
+    	width: 100%;
+    	background-color: #eee;
+	}
+
+	.top-times-side {
+		float: left;
+		_display: inline;
+		width: 100%;
+		background-color: #f4f4f4;
+	}
+
+	@media screen and (min-width: 30em) {
+    .input-side {
+	        width: 70%;
+	    }
+	.top-times-side {
+			width: 30%;
+		}
+	}
+
+	.cf:before, .cf:after {
+    content: " ";
+    display: table;
+	}
+
+	.cf:after {
+	    clear: both;
+	}
+
+	.cf {
+	    *zoom: 1;
+	}
+
 </style>
