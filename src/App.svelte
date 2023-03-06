@@ -1,5 +1,6 @@
 <script>
 	import VoiceRecognition from './components/VoiceRecognition.svelte'
+	
 
 	import * as chrono from 'chrono-node';
 
@@ -77,7 +78,6 @@
 			};
 		});
 
-		console.log(sharedCalendar);
 		return sharedCalendar;
 	};
 
@@ -149,8 +149,6 @@
 						sharedIntervals.push({users: userSet, start: [d, h, m], end: []});
 					};
 
-					console.log(ongoingIntervals);
-					console.log(sharedIntervals);
 					ongoingIntervals.forEach(i => {
 						if (!isSuperset(userSet, sharedIntervals[i].users)) {
 							sharedIntervals[i]['end'] = [d, h, m];
@@ -166,7 +164,6 @@
 		sharedIntervals.sort((a, b) => { 
 		    let numUserDiff = b['users'].size - a['users'].size;
 		    if (numUserDiff != 0) {
-		    	console.log('diff number!');
 		    	return numUserDiff;
 		    }
 		    else if (a['start']['d'] - b['start']['d'] != 0) {
@@ -266,7 +263,6 @@
 				availableTimes[weekday].push([startHourDate, endHourDate]);
 			};
 		};
-		console.log(availableTimes);
 		return availableTimes;
 	};
 
@@ -283,14 +279,33 @@
 	createSharedCalendar(allUserTimes);
 	getTopNTimes(allUserTimes, 10);
 
-	console.log(pro)
+	
+
+	function getAllNotes(){
+		let notes = [];
+    	let key;
+    	for (var i = 0; i < localStorage.length; i++) {
+      	key = localStorage.key(i);
+
+      	if (key.substring(0, 5) == "note-") {
+			notes.push({
+			date: key.replace("note-", ""),
+			content: localStorage.getItem(localStorage.key(i))
+        });
+      }
+    }
+	return notes;
+	}
+
+
 </script>
 
 <main>
-	<VoiceRecognition bind:noteContent = {voice}/>
+	<VoiceRecognition bind:noteContent = {voice}></VoiceRecognition>
 	<p>from Binding: {voice}</p>
 	<h1>Hello</h1>
 	<h2>When are you available to meet?</h2>
+	
 	<br>
 	<textarea bind:value={textValue} on:input={handleInput} placeholder="tues before 2pm,
 wed all day,

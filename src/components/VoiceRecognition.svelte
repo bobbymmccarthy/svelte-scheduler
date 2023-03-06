@@ -2,6 +2,8 @@
     import Recorder from "./Recorder.svelte";
   
     export let noteContent = ""
+
+    let notes = getAllNotes()
     let support = true;
     let recordingText = `Press the Play button to Start recording.`;
     let SpeechRecognition =
@@ -12,7 +14,6 @@
     recognition.onresult = function(event) {
       let current = event.resultIndex;
       let transcript = event.results[current][0].transcript;
-      console.log(transcript);
       noteContent += transcript;
     };
   
@@ -72,13 +73,47 @@
         recordingText = `Press the Play button to Start recording.`;
       }, 5000);
     }
+    function saveNote(dateTime, content) {
+      localStorage.setItem("note-" + dateTime, content);
+    }
+  function getAllNotes() {
+    let notes = [];
+    let key;
+    for (var i = 0; i < localStorage.length; i++) {
+      key = localStorage.key(i);
+
+      if (key.substring(0, 5) == "note-") {
+        notes.push({
+          date: key.replace("note-", ""),
+          content: localStorage.getItem(localStorage.key(i))
+        });
+      }
+    }
+    return notes;
+  }
+    function saveHandler() {
+    recognition.stop();
+
+    if (!noteContent.length) {
+      recordingText =
+        "Could not save empty note. Please add a message to your note.";
+    } else {
+      saveNote(new Date().toLocaleString(), noteContent);
+      noteContent = "";
+      notes = getAllNotes();
+      recordingText = "Note saved successfully.";
+      window.setTimeout(() => {
+        recordingText = `Press the Play button to Start recording.`;
+    }, 5000);
+    }
+  }
    
     function readOutLoudHandler(event) {
       let data = event.detail.content;
       readOutLoud(data);
     }
-   
     
+    console.log(notes)
     
   
   </script>
@@ -92,6 +127,9 @@
     <!-- {#each Object.entries(processTimes(noteContent)) as [day, arr]}
     <p>{day}, {arr}</p>
     {/each} -->
+    {#each getAllNotes() as note}
+    <p>{note.content}</p>
+    {/each}
    
   {/if}
   

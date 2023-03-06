@@ -27,6 +27,7 @@
 <div>
     <button on:click={() => iconHandler('PLAY')}>{isActive ? 'Pause' : 'Record'}</button>
     <button on:click={() => iconHandler('RESET')}>RESET</button> 
+    <button on:click={() => iconHandler('SAVE')}>SAVE</button>
     {#if isActive}
       <p>Recording...</p>
     {/if}
