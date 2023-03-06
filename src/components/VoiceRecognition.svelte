@@ -1,9 +1,9 @@
 <script>
     import Recorder from "./Recorder.svelte";
-  
+    // import {processText } from "../helpers.js"
     export let noteContent = ""
 
-    let notes = getAllNotes()
+    let times = getAllTimes()
     let support = true;
     let recordingText = `Press the Play button to Start recording.`;
     let SpeechRecognition =
@@ -71,23 +71,21 @@
         recordingText = `Press the Play button to Start recording.`;
       }, 5000);
     }
-    function saveNote(dateTime, content) {
-      localStorage.setItem("note-" + dateTime, content);
-    }
-  function getAllNotes() {
-    let notes = [];
+    
+  function saveTime(user, content) {
+    localStorage.setItem(user, JSON.stringify(processText(content)));
+  }
+  function getAllTimes() {
+    let times = [];
     let key;
     for (var i = 0; i < localStorage.length; i++) {
       key = localStorage.key(i);
-
-      if (key.substring(0, 5) == "note-") {
-        notes.push({
-          date: key.replace("note-", ""),
-          content: localStorage.getItem(localStorage.key(i))
-        });
-      }
+      times.push({
+        user: key,
+        content: localStorage.getItem(localStorage.key(i))
+      });
     }
-    return notes;
+    return times;
   }
     function saveHandler() {
     recognition.stop();
@@ -96,9 +94,9 @@
       recordingText =
         "Could not save empty note. Please add a message to your note.";
     } else {
-      saveNote(new Date().toLocaleString(), noteContent);
+      saveTime(new Date().toLocaleString(), noteContent);
       noteContent = "";
-      notes = getAllNotes();
+      times = getAllTimes();
       recordingText = "Note saved successfully.";
       window.setTimeout(() => {
         recordingText = `Press the Play button to Start recording.`;
@@ -111,7 +109,7 @@
       readOutLoud(data);
     }
     
-    console.log(notes)
+    console.log(times)
     
   
   </script>
@@ -128,7 +126,7 @@
     <!-- {#each Object.entries(processTimes(noteContent)) as [day, arr]}
     <p>{day}, {arr}</p>
     {/each} -->
-    {#each getAllNotes() as note}
+    {#each getAllTimes() as note}
     <p>{note.content}</p>
     {/each}
    

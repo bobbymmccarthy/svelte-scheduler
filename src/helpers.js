@@ -259,4 +259,4 @@ function processText(text) {
 	return availableTimes;
 };
 
-export {processText, createSharedCalendar, getTopNTimes};
+export default {processText, createSharedCalendar, getTopNTimes};
