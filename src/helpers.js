@@ -63,29 +63,6 @@ async function createSharedCalendar(userTimes) {
 	return sharedCalendar;
 };
 
-// function createCalendarFromAvailableTimes(user, availableTimes) {
-// 	let calendar = createEmptyCalendar();
-
-// 	for (const [day, availableBlocks] of Object.entries(availableTimes)) {
-// 		availableBlocks.forEach(block => {
-// 			let startHour = block[0].getHours();
-// 			let endHour = block[1].getHours();
-
-// 			for (let h = startHour; h <= endHour; h++) {
-
-// 				let startMin = (h != startHour) ? 0 : block[0].getMinutes();
-// 				let endMin = (h != endHour) ? 60 : block[1].getMinutes();
-
-// 				for (let m = startMin; m < endMin; m+=15) {
-// 					calendar[day][h+'-'+m].push(user);
-// 				};
-// 			};
-// 		});
-// 	};
-
-// 	return calendar;
-// };
-
 // Set equality from https://stackoverflow.com/questions/31128855/comparing-ecma6-sets-for-equality
 const eqSet = (xs, ys) =>
 xs.size === ys.size &&
@@ -100,6 +77,7 @@ function isSuperset(set, subset) {
   return true;
 };
 
+// Concepts incorporated: Rendering Times
 // Take userTimes and returns a sorted list of the top N shared available time windows at least minMeetingLengthMin long
 async function getTopNIntervals(userTimesPromise, N) {
 	let userTimes = await userTimesPromise;
@@ -182,6 +160,7 @@ customChrono.refiners.push({
     }
 });
 
+// Concepts incorporated: Text Time Description
 // Takes text and processes it into a dictionary of available times for each day of the week: {0: [[sun-datetimestart1, sun-datetimeend1], [sun-datetimestart2, sun-datetimeend2]], 1: [], ... 6: []}
 function processText(text) {
 	text = text.toLowerCase();
@@ -289,6 +268,7 @@ function processText(text) {
 	return availableTimes;
 };
 
+// Concepts incorporated: Rendering Times
 function makeTimeArr(timeMap){
 	console.log('in time array')
 	let timeArr = Array(24).fill(0).map(() => Array(7).fill(0));
@@ -308,4 +288,29 @@ function makeTimeArr(timeMap){
 	return timeArr
 }
 
+// function createCalendarFromAvailableTimes(user, availableTimes) {
+// 	let calendar = createEmptyCalendar();
+
+// 	for (const [day, availableBlocks] of Object.entries(availableTimes)) {
+// 		availableBlocks.forEach(block => {
+// 			let startHour = block[0].getHours();
+// 			let endHour = block[1].getHours();
+
+// 			for (let h = startHour; h <= endHour; h++) {
+
+// 				let startMin = (h != startHour) ? 0 : block[0].getMinutes();
+// 				let endMin = (h != endHour) ? 60 : block[1].getMinutes();
+
+// 				for (let m = startMin; m < endMin; m+=15) {
+// 					calendar[day][h+'-'+m].push(user);
+// 				};
+// 			};
+// 		});
+// 	};
+
+// 	return calendar;
+// };
+
 export {makeTimeArr, processText, createSharedCalendar, getTopNIntervals};
+
+

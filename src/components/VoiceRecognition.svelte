@@ -3,6 +3,7 @@
   import Recorder from "./Recorder.svelte";
   import {processText} from '../helpers.js';
 
+  // Concepts incorporated: Text Time Description
   export let noteContent = ""
 
   let recordingText = `Press the Play button to Start recording.`;

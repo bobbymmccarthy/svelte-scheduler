@@ -13,10 +13,10 @@
 	// localStorage.clear()
 
 	let topIntervals = getTopNIntervals(getAllUserTimes(true), 5);
-	// postTimes('Bobby', {});
 	getTimes();
 	
-	console.log(topIntervals);
+
+	// Concepts incorporated: Rendering Times
 	let topTimesText = topTimesToText(topIntervals);
 	async function topTimesToText(topIntervalsPromise) {
 		console.log({topIntervalsPromise})
@@ -36,8 +36,7 @@
 		return topTimesText;
 	};
 
-	// let timeArr = Array(13 * 4).fill(0).map(() => Array(7).fill(0));
-
+	// Concepts incorporated: Time Text Description
 	function handleInput() {
 		availableTimes = processText(text);
 	};
@@ -60,7 +59,6 @@
 		return data
 	}
 	
-
 	async function submit() {
 		if (name ===''){
 			alert('please include name!')
@@ -77,6 +75,7 @@
 		
 	};
 
+	// Concepts incorporated: User
 	async function getAllUserTimes(allInfo = false) {
 		let userTimes = [];
 		let payload = await getTimes();
@@ -144,8 +143,6 @@ fri except 3-4pm and 5-6pm
 	</div>
 	</article>
 
-
-	<!-- <Table timeArr = {timeArr}></Table> -->
 	</main>
 
 <style>

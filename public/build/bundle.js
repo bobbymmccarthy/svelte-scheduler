@@ -10672,29 +10672,6 @@ var app = (function () {
     	console.log({sharedCalendar});
     	return sharedCalendar;
     }
-    // function createCalendarFromAvailableTimes(user, availableTimes) {
-    // 	let calendar = createEmptyCalendar();
-
-    // 	for (const [day, availableBlocks] of Object.entries(availableTimes)) {
-    // 		availableBlocks.forEach(block => {
-    // 			let startHour = block[0].getHours();
-    // 			let endHour = block[1].getHours();
-
-    // 			for (let h = startHour; h <= endHour; h++) {
-
-    // 				let startMin = (h != startHour) ? 0 : block[0].getMinutes();
-    // 				let endMin = (h != endHour) ? 60 : block[1].getMinutes();
-
-    // 				for (let m = startMin; m < endMin; m+=15) {
-    // 					calendar[day][h+'-'+m].push(user);
-    // 				};
-    // 			};
-    // 		});
-    // 	};
-
-    // 	return calendar;
-    // };
-
     // Set equality from https://stackoverflow.com/questions/31128855/comparing-ecma6-sets-for-equality
     const eqSet = (xs, ys) =>
     xs.size === ys.size &&
@@ -10708,6 +10685,7 @@ var app = (function () {
       }
       return true;
     }
+    // Concepts incorporated: Rendering Times
     // Take userTimes and returns a sorted list of the top N shared available time windows at least minMeetingLengthMin long
     async function getTopNIntervals(userTimesPromise, N) {
     	let userTimes = await userTimesPromise;
@@ -10777,6 +10755,7 @@ var app = (function () {
         }
     });
 
+    // Concepts incorporated: Text Time Description
     // Takes text and processes it into a dictionary of available times for each day of the week: {0: [[sun-datetimestart1, sun-datetimeend1], [sun-datetimestart2, sun-datetimeend2]], 1: [], ... 6: []}
     function processText(text) {
     	text = text.toLowerCase();
@@ -10870,6 +10849,7 @@ var app = (function () {
     		}	}	console.log(availableTimes);
     	return availableTimes;
     }
+    // Concepts incorporated: Rendering Times
     function makeTimeArr(timeMap){
     	console.log('in time array');
     	let timeArr = Array(24).fill(0).map(() => Array(7).fill(0));
@@ -11472,7 +11452,7 @@ var app = (function () {
     	return block;
     }
 
-    // (131:3) {:then topTimes}
+    // (130:3) {:then topTimes}
     function create_then_block(ctx) {
     	let each_1_anchor;
     	let each_value = /*topTimes*/ ctx[18];
@@ -11533,14 +11513,14 @@ var app = (function () {
     		block,
     		id: create_then_block.name,
     		type: "then",
-    		source: "(131:3) {:then topTimes}",
+    		source: "(130:3) {:then topTimes}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (132:3) {#each topTimes as time}
+    // (131:3) {#each topTimes as time}
     function create_each_block(ctx) {
     	let div;
     	let p;
@@ -11590,14 +11570,14 @@ var app = (function () {
     			t11 = text(")");
     			t12 = space();
     			br2 = element("br");
-    			add_location(b, file, 134, 6, 4099);
-    			add_location(br0, file, 135, 6, 4165);
-    			add_location(u, file, 136, 6, 4176);
-    			add_location(br1, file, 136, 35, 4205);
-    			add_location(p, file, 133, 5, 4089);
+    			add_location(b, file, 133, 6, 4097);
+    			add_location(br0, file, 134, 6, 4163);
+    			add_location(u, file, 135, 6, 4174);
+    			add_location(br1, file, 135, 35, 4203);
+    			add_location(p, file, 132, 5, 4087);
     			attr_dev(div, "class", "top-time svelte-1q0ni7j");
-    			add_location(div, file, 132, 4, 4059);
-    			add_location(br2, file, 140, 4, 4256);
+    			add_location(div, file, 131, 4, 4057);
+    			add_location(br2, file, 139, 4, 4254);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -11639,14 +11619,14 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(132:3) {#each topTimes as time}",
+    		source: "(131:3) {#each topTimes as time}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (129:24)      <p>Processing Times...</p>    {:then topTimes}
+    // (128:24)      <p>Processing Times...</p>    {:then topTimes}
     function create_pending_block(ctx) {
     	let p;
 
@@ -11654,7 +11634,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Processing Times...";
-    			add_location(p, file, 129, 4, 3980);
+    			add_location(p, file, 128, 4, 3978);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -11669,7 +11649,7 @@ var app = (function () {
     		block,
     		id: create_pending_block.name,
     		type: "pending",
-    		source: "(129:24)      <p>Processing Times...</p>    {:then topTimes}",
+    		source: "(128:24)      <p>Processing Times...</p>    {:then topTimes}",
     		ctx
     	});
 
@@ -11850,43 +11830,43 @@ var app = (function () {
     			t39 = space();
     			info.block.c();
     			attr_dev(h1, "class", "svelte-1q0ni7j");
-    			add_location(h1, file, 102, 1, 3003);
-    			add_location(h20, file, 105, 3, 3095);
-    			add_location(input0, file, 106, 3, 3113);
-    			add_location(h21, file, 107, 3, 3142);
-    			add_location(b0, file, 108, 7, 3190);
-    			add_location(b1, file, 108, 30, 3213);
-    			add_location(h4, file, 108, 3, 3186);
-    			add_location(u0, file, 109, 21, 3270);
-    			add_location(i0, file, 109, 60, 3309);
-    			add_location(br0, file, 109, 73, 3322);
-    			add_location(br1, file, 110, 3, 3330);
-    			add_location(u1, file, 110, 33, 3360);
-    			add_location(i1, file, 110, 47, 3374);
-    			add_location(i2, file, 110, 67, 3394);
-    			add_location(u2, file, 110, 85, 3412);
-    			add_location(i3, file, 110, 100, 3427);
-    			add_location(p0, file, 109, 3, 3252);
-    			add_location(p1, file, 112, 3, 3461);
+    			add_location(h1, file, 101, 1, 3001);
+    			add_location(h20, file, 104, 3, 3093);
+    			add_location(input0, file, 105, 3, 3111);
+    			add_location(h21, file, 106, 3, 3140);
+    			add_location(b0, file, 107, 7, 3188);
+    			add_location(b1, file, 107, 30, 3211);
+    			add_location(h4, file, 107, 3, 3184);
+    			add_location(u0, file, 108, 21, 3268);
+    			add_location(i0, file, 108, 60, 3307);
+    			add_location(br0, file, 108, 73, 3320);
+    			add_location(br1, file, 109, 3, 3328);
+    			add_location(u1, file, 109, 33, 3358);
+    			add_location(i1, file, 109, 47, 3372);
+    			add_location(i2, file, 109, 67, 3392);
+    			add_location(u2, file, 109, 85, 3410);
+    			add_location(i3, file, 109, 100, 3425);
+    			add_location(p0, file, 108, 3, 3250);
+    			add_location(p1, file, 111, 3, 3459);
     			attr_dev(textarea, "placeholder", "mon 9-10am, 2-3:45pm\nwed all day,\nthurs except 1-2pm,\nfri except 3-4pm and 5-6pm\n...");
     			attr_dev(textarea, "class", "svelte-1q0ni7j");
-    			add_location(textarea, file, 114, 3, 3568);
-    			add_location(br2, file, 119, 3, 3733);
-    			add_location(br3, file, 119, 7, 3737);
+    			add_location(textarea, file, 113, 3, 3566);
+    			add_location(br2, file, 118, 3, 3731);
+    			add_location(br3, file, 118, 7, 3735);
     			attr_dev(input1, "class", "submit svelte-1q0ni7j");
     			attr_dev(input1, "type", "button");
     			input1.value = "Submit";
-    			add_location(input1, file, 120, 3, 3745);
-    			add_location(br4, file, 121, 3, 3818);
+    			add_location(input1, file, 119, 3, 3743);
+    			add_location(br4, file, 120, 3, 3816);
     			attr_dev(div0, "class", "input-side svelte-1q0ni7j");
-    			add_location(div0, file, 104, 2, 3067);
-    			add_location(h22, file, 127, 3, 3932);
+    			add_location(div0, file, 103, 2, 3065);
+    			add_location(h22, file, 126, 3, 3930);
     			attr_dev(div1, "class", "top-times-side svelte-1q0ni7j");
-    			add_location(div1, file, 126, 2, 3900);
+    			add_location(div1, file, 125, 2, 3898);
     			attr_dev(article, "class", "cf svelte-1q0ni7j");
-    			add_location(article, file, 103, 1, 3044);
+    			add_location(article, file, 102, 1, 3042);
     			attr_dev(main, "class", "svelte-1q0ni7j");
-    			add_location(main, file, 101, 0, 2995);
+    			add_location(main, file, 100, 0, 2993);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -12065,13 +12045,12 @@ var app = (function () {
     	// localStorage.clear()
     	let topIntervals = getTopNIntervals(getAllUserTimes(true), 5);
 
-    	// postTimes('Bobby', {});
     	getTimes();
 
-    	console.log(topIntervals);
+    	// Concepts incorporated: Rendering Times
     	let topTimesText = topTimesToText(topIntervals);
 
-    	// let timeArr = Array(13 * 4).fill(0).map(() => Array(7).fill(0));
+    	// Concepts incorporated: Time Text Description
     	function handleInput() {
     		availableTimes = processText(text);
     	}
@@ -12110,6 +12089,7 @@ var app = (function () {
     		window.location.reload();
     	}
 
+    	// Concepts incorporated: User
     	async function getAllUserTimes(allInfo = false) {
     		let userTimes = [];
     		let payload = await getTimes();
