@@ -48,7 +48,7 @@ async function createSharedCalendar(userTimes) {
 	userTimesPayload.forEach(obj => {
 		if (obj) {
 			let user = obj['name'];
-			let availableTimes = obj['availableTimes'];
+			let availableTimes = obj['times'];
 			if (availableTimes) {
 				for (const [day, availableBlocks] of Object.entries(availableTimes)) {
 			  availableBlocks.forEach(block => {
