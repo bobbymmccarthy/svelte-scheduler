@@ -28,11 +28,12 @@ function createEmptyCalendar() {
 
 // Take a list of [{user, availableTimes}, ...] and returns a single sharedCalendar dictionary of the form {day: {'hour-min': ["user1", "user2", ...], ...}, ...}
 // the key for 9am would be '9-0', for 9:15am would be '9-15', for 9pm woul be '22-0'
-function createSharedCalendar(userTimes) {
-
+async function createSharedCalendar(userTimes) {
+	console.log({userTimes})
+	let userTimesPayload = await userTimes;
 	let sharedCalendar = createEmptyCalendar();
-
-	userTimes.forEach(obj => {
+	console.log({userTimesPayload})
+	userTimesPayload.forEach(obj => {
 		if (obj) {
 			let user = obj['name'];
 			let availableTimes = obj['availableTimes'];
@@ -58,6 +59,7 @@ function createSharedCalendar(userTimes) {
 		};
 	});
 
+	console.log({sharedCalendar});
 	return sharedCalendar;
 };
 
@@ -99,11 +101,11 @@ function isSuperset(set, subset) {
 };
 
 // Take userTimes and returns a sorted list of the top N shared available time windows at least minMeetingLengthMin long
-function getTopNIntervals(userTimes, N) {
-
-	let sharedCalendar = createSharedCalendar(userTimes);
-	
-
+async function getTopNIntervals(userTimesPromise, N) {
+	let userTimes = await userTimesPromise;
+	console.log({userTimes})
+	let sharedCalendar = await createSharedCalendar(userTimes);
+	console.log({sharedCalendar})
 	let sharedIntervals = [];
 	let ongoingIntervals = new Set();
 	let prevUserSet = new Set();
@@ -111,7 +113,9 @@ function getTopNIntervals(userTimes, N) {
 	for (let d = 0; d < 7; d++) {
 		for (let h = MIN_HOUR; h <= MAX_HOUR; h++) {
 			for (let m = 0; m < 60; m+=15) {
-				let userSet = new Set(sharedCalendar[d][h+'-'+m]);
+				let cal = await sharedCalendar[d][h+'-'+m]
+				// console.log({cal})
+				let userSet = new Set(cal);
 
 				// Test if interval is keeping track of a new set of users not already being covered
 				let newUserSet = userSet.size >= 1;
@@ -198,6 +202,8 @@ function processText(text) {
 		availableTimes[i] = [];
 	};
 
+	const fullAvailability =/all day|anytime|any time|whenever/
+	const busyIndicator = /except|besides|apart/
 
 	for (let i = 0; i < lines.length; i++) {
 		let line = lines[i];
@@ -285,4 +291,23 @@ function processText(text) {
 	return availableTimes;
 };
 
-export {processText, createSharedCalendar, getTopNIntervals};
+function makeTimeArr(timeMap){
+	console.log('in time array')
+	let timeArr = Array(24).fill(0).map(() => Array(7).fill(0));
+	for (let i = 0; i<7; i++) {
+		for(let j = 0; j<24; j++) {
+			console.log(`timeMap ${timeMap[i]}`)
+			for (let k = 0; k < timeMap[i].length; k++){
+				// console.log(`time Arr[i][k]: ${timeArr[i]}`);
+				console.log(timeMap[i][k][0].getHours())
+				if (timeMap[i][k][0].getHours() <= j && timeMap[i][k][1].getHours() >= j){
+					timeArr[j][i] = true;
+				}
+			}
+		}
+		
+	}
+	return timeArr
+}
+
+export {makeTimeArr, processText, createSharedCalendar, getTopNIntervals};

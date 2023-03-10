@@ -1,21 +1,27 @@
 <script>
 	import VoiceRecognition from './components/VoiceRecognition.svelte'
-	import {processText, getTopNIntervals} from './helpers.js';
+	import {processText, makeTimeArr, getTopNIntervals} from './helpers.js';
 	import Table from './components/Table.svelte'
 	const dayArr = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-
+	let voiceText = '';
+	let typedText = '';
 	let name = '';
 	let text = '';
 	let availableTimes = null;
+	let API_BASE = 'http://localhost:3001';
 
-	// If you want to reset database, uncomment this line and run app
-	// localStorage.clear();
+	// localStorage.clear()
 
 	let topIntervals = getTopNIntervals(getAllUserTimes(), 5);
+	// postTimes('Bobby', {});
+	getTimes();
+	
 	console.log(topIntervals);
 	let topTimesText = topTimesToText(topIntervals);
-
-	function topTimesToText(topIntervals) {
+	async function topTimesToText(topIntervalsPromise) {
+		console.log({topIntervalsPromise})
+		let topIntervals = await topIntervalsPromise;
+		console.log({topIntervals})
 		let topTimesText = [];
 		topIntervals.forEach((interval) => {
 			let day = interval['start'][0];
@@ -25,7 +31,6 @@
 			let endTime = interval['end'][1] + ':' + (endMin == 0 ? '00' : endMin.toString());
 			let numUsers = interval['users'].size;
 			let users = Array.from(interval['users']).join(', ')
-
 			topTimesText.push({day: day, startTime: startTime, endTime: endTime, numUsers: numUsers, users: users})
 		});
 		return topTimesText;
@@ -37,25 +42,52 @@
 		availableTimes = processText(text);
 	};
 
-	function submit() {
-		availableTimes = processText(text);
-		const userID = localStorage.length;
-		let userData = {id: userID, name: name, availableTimes: availableTimes};
-		localStorage.setItem(userID, JSON.stringify(userData));
-		topTimesText = topTimesToText(getTopNIntervals(getAllUserTimes(), 5));
-		name = '';
-		text = '';
+
+	async function getTimes(){
+		const data = await ((await fetch(API_BASE + '/userTimes')).json())
+		return data
+	}
+
+	async function postTimes(username, userTimes){
+		const strUserTimes = JSON.stringify(userTimes);
+		const requestOptions = {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({name: username, times: strUserTimes})
+		}
+		const data = await(await fetch(API_BASE+ '/userTimes', requestOptions)).json()
+		console.log(data)
+	}
+	
+
+	async function submit() {
+		if (name ===''){
+			alert('please include name!')
+		}
+		else{
+			availableTimes = processText(text);
+			postTimes(name, availableTimes);
+			let userTimes = await getAllUserTimes();
+			topTimesText = topTimesToText(getTopNIntervals(userTimes, 5));
+			name = '';
+			text = '';
+		}
+		
 	};
 
-	function getAllUserTimes() {
+	async function getAllUserTimes() {
 		let userTimes = [];
-		for (let i = 0; i < localStorage.length; i++) {
-	      	userTimes.push(JSON.parse(localStorage.getItem(i)));
+		let payload = await getTimes();
+		console.log({payload})
+		for (let i = 0; i < payload.length; i++) {
+			console.log(`getting user times: ${JSON.parse(payload[i].times)}`)
+	      	userTimes.push(JSON.parse(payload[i].times));
         };
-
-		console.log(userTimes);
-        return userTimes;
+		console.log(userTimes)
+		return userTimes
 	};
+
+	$: timeArr = text ? makeTimeArr(processText(text)) : Array(24).fill(0).map(() => Array(7).fill(0))
 
 </script>
 
@@ -69,8 +101,9 @@
 			<h4><b>Voice Record</b> or <b>Type</b> your availablilty.</h4>
 			<p>Start with the <u>day of the week</u> followed by the <i>times</i>.<br>
 			<br>For example, I'm free... "<u>Monday</u> <i>9am-10am</i> and <i>11am-12pm</i>, <u>Tuesday</u> <i>except 3-4pm</i>, ..."</p>
+
+			<p>BE SURE TO INDICATE AM OR PM!</p>
 			<VoiceRecognition bind:noteContent = {text}></VoiceRecognition>
-			<br>
 			<textarea bind:value={text} on:input={handleInput} placeholder="mon 9-10am, 2-3:45pm
 wed all day,
 thurs except 1-2pm,
@@ -79,11 +112,16 @@ fri except 3-4pm and 5-6pm
 			<br><br>
 			<input class="submit" type="button" value="Submit" on:click={submit}>
 			<br>
-		</div>
 
+			<Table timeArr = {makeTimeArr(processText(text))}></Table>
+		</div>
+		
 		<div class="top-times-side">
 			<h2>Top Times</h2>
-			{#each topTimesText as time}
+			{#await topTimesText}
+				<p>Processing Times...</p>
+			{:then topTimes}
+			{#each topTimes as time}
 				<div class = 'top-time'>
 					<p>
 						<b>{dayArr[time.day]} {time.startTime} - {time.endTime}</b>
@@ -94,7 +132,8 @@ fri except 3-4pm and 5-6pm
 				</div>
 				<br>
 			{/each}
-		</div>
+			{/await}
+	</div>
 	</article>
 
 
@@ -131,7 +170,6 @@ fri except 3-4pm and 5-6pm
 	.submit {
 		font-size: 1.7em;
 	}
-
 
 	.input-side {
 		float: left;

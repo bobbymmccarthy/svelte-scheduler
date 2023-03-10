@@ -1,9 +1,14 @@
 
-(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35744/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
+(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 var app = (function () {
     'use strict';
 
     function noop() { }
+    // Adapted from https://github.com/then/is-promise/blob/master/index.js
+    // Distributed under MIT License https://github.com/then/is-promise/blob/master/LICENSE
+    function is_promise(value) {
+        return !!value && (typeof value === 'object' || typeof value === 'function') && typeof value.then === 'function';
+    }
     function add_location(element, file, line, column, char) {
         element.__svelte_meta = {
             loc: { file, line, column, char }
@@ -52,6 +57,9 @@ var app = (function () {
     }
     function space() {
         return text(' ');
+    }
+    function empty() {
+        return text('');
     }
     function listen(node, event, handler, options) {
         node.addEventListener(event, handler, options);
@@ -216,6 +224,19 @@ var app = (function () {
     }
     const outroing = new Set();
     let outros;
+    function group_outros() {
+        outros = {
+            r: 0,
+            c: [],
+            p: outros // parent group
+        };
+    }
+    function check_outros() {
+        if (!outros.r) {
+            run_all(outros.c);
+        }
+        outros = outros.p;
+    }
     function transition_in(block, local) {
         if (block && block.i) {
             outroing.delete(block);
@@ -240,6 +261,88 @@ var app = (function () {
         else if (callback) {
             callback();
         }
+    }
+
+    function handle_promise(promise, info) {
+        const token = info.token = {};
+        function update(type, index, key, value) {
+            if (info.token !== token)
+                return;
+            info.resolved = value;
+            let child_ctx = info.ctx;
+            if (key !== undefined) {
+                child_ctx = child_ctx.slice();
+                child_ctx[key] = value;
+            }
+            const block = type && (info.current = type)(child_ctx);
+            let needs_flush = false;
+            if (info.block) {
+                if (info.blocks) {
+                    info.blocks.forEach((block, i) => {
+                        if (i !== index && block) {
+                            group_outros();
+                            transition_out(block, 1, 1, () => {
+                                if (info.blocks[i] === block) {
+                                    info.blocks[i] = null;
+                                }
+                            });
+                            check_outros();
+                        }
+                    });
+                }
+                else {
+                    info.block.d(1);
+                }
+                block.c();
+                transition_in(block, 1);
+                block.m(info.mount(), info.anchor);
+                needs_flush = true;
+            }
+            info.block = block;
+            if (info.blocks)
+                info.blocks[index] = block;
+            if (needs_flush) {
+                flush();
+            }
+        }
+        if (is_promise(promise)) {
+            const current_component = get_current_component();
+            promise.then(value => {
+                set_current_component(current_component);
+                update(info.then, 1, info.value, value);
+                set_current_component(null);
+            }, error => {
+                set_current_component(current_component);
+                update(info.catch, 2, info.error, error);
+                set_current_component(null);
+                if (!info.hasCatch) {
+                    throw error;
+                }
+            });
+            // if we previously had a then/catch block, destroy it
+            if (info.current !== info.pending) {
+                update(info.pending, 0);
+                return true;
+            }
+        }
+        else {
+            if (info.current !== info.then) {
+                update(info.then, 1, info.value, promise);
+                return true;
+            }
+            info.resolved = promise;
+        }
+    }
+    function update_await_block_branch(info, ctx, dirty) {
+        const child_ctx = ctx.slice();
+        const { resolved } = info;
+        if (info.current === info.then) {
+            child_ctx[info.value] = resolved;
+        }
+        if (info.current === info.catch) {
+            child_ctx[info.error] = resolved;
+        }
+        info.block.p(child_ctx, dirty);
     }
 
     const globals = (typeof window !== 'undefined'
@@ -10520,25 +10623,14 @@ var app = (function () {
 
     const shortHandDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayRegex = /mon|tue|wed|thu|fri|sat|sun/;
+    const alldayRegex =/all day|anytime|any time|whenever/;
+    const busyRegex = /except|besides|apart/;
+    const beforeRegex =/before/;
+    const afterRegex = /after/;
     const customChrono = distExports.casual.clone();
 
-    let MIN_HOUR = 9;
-    let MAX_HOUR = 22;
-
-    // Refine parser for larger hour before smaller hour
-    // E.g. 11-2pm = 11am-2pm
-    customChrono.refiners.push({
-        refine: (context, results) => {
-            results.forEach((result) => {
-            	if ('start' in result && 'end' in result && result.end != null && result.start.get('hour') > result.end.get('hour')) {
-                	result.start.assign('meridiem', 0);
-                	result.start.assign('hour', result.start.get('hour') % 12);
-                	result.end.assign('meridiem', 1);
-                	result.end.assign('hour', result.end.get('hour') % 12 + 12);
-                }        });
-            return results;
-        }
-    });
+    let MIN_HOUR = 5;
+    let MAX_HOUR = 23;
 
     function createEmptyCalendar() {
     	let calendar = {};
@@ -10551,11 +10643,12 @@ var app = (function () {
     }
     // Take a list of [{user, availableTimes}, ...] and returns a single sharedCalendar dictionary of the form {day: {'hour-min': ["user1", "user2", ...], ...}, ...}
     // the key for 9am would be '9-0', for 9:15am would be '9-15', for 9pm woul be '22-0'
-    function createSharedCalendar(userTimes) {
-
+    async function createSharedCalendar(userTimes) {
+    	console.log({userTimes});
+    	let userTimesPayload = await userTimes;
     	let sharedCalendar = createEmptyCalendar();
-
-    	userTimes.forEach(obj => {
+    	console.log({userTimesPayload});
+    	userTimesPayload.forEach(obj => {
     		if (obj) {
     			let user = obj['name'];
     			let availableTimes = obj['availableTimes'];
@@ -10576,6 +10669,7 @@ var app = (function () {
     			  });
     			}			}		}	});
 
+    	console.log({sharedCalendar});
     	return sharedCalendar;
     }
     // function createCalendarFromAvailableTimes(user, availableTimes) {
@@ -10615,18 +10709,20 @@ var app = (function () {
       return true;
     }
     // Take userTimes and returns a sorted list of the top N shared available time windows at least minMeetingLengthMin long
-    function getTopNIntervals(userTimes, N) {
-
-    	let sharedCalendar = createSharedCalendar(userTimes);
-    	
-
+    async function getTopNIntervals(userTimesPromise, N) {
+    	let userTimes = await userTimesPromise;
+    	console.log({userTimes});
+    	let sharedCalendar = await createSharedCalendar(userTimes);
+    	console.log({sharedCalendar});
     	let sharedIntervals = [];
     	let ongoingIntervals = new Set();
 
     	for (let d = 0; d < 7; d++) {
     		for (let h = MIN_HOUR; h <= MAX_HOUR; h++) {
     			for (let m = 0; m < 60; m+=15) {
-    				let userSet = new Set(sharedCalendar[d][h+'-'+m]);
+    				let cal = await sharedCalendar[d][h+'-'+m];
+    				// console.log({cal})
+    				let userSet = new Set(cal);
 
     				// Test if interval is keeping track of a new set of users not already being covered
     				let newUserSet = userSet.size >= 1;
@@ -10665,6 +10761,21 @@ var app = (function () {
 
     	return sharedIntervals.slice(0, N);
     }
+    // Refine parser for larger hour before smaller hour
+    // E.g. 11-2pm = 11am-2pm
+    // #TODO: handle no am/pm, e.g. 2-3 = 2-3pm OR somehow alert user that am/pm was left off?
+    customChrono.refiners.push({
+        refine: (context, results) => {
+            results.forEach((result) => {
+            	if ('start' in result && 'end' in result && result.end != null && result.start.get('hour') > result.end.get('hour')) {
+                	result.start.assign('meridiem', 0);
+                	result.start.assign('hour', result.start.get('hour') % 12);
+                	result.end.assign('meridiem', 1);
+                	result.end.assign('hour', result.end.get('hour') % 12 + 12);
+                }        });
+            return results;
+        }
+    });
 
     // Takes text and processes it into a dictionary of available times for each day of the week: {0: [[sun-datetimestart1, sun-datetimeend1], [sun-datetimestart2, sun-datetimeend2]], 1: [], ... 6: []}
     function processText(text) {
@@ -10682,28 +10793,27 @@ var app = (function () {
     	for (let i = 0; i < 7; i++) {
     		availableTimes[i] = [];
     	}
-    	const fullAvailability =/all day|anytime|any time|whenever/;
-    	const busyIndicator = /except|besides|apart/;
-
     	for (let i = 0; i < lines.length; i++) {
     		let line = lines[i];
+    		console.log(lines[i]);
     		let parsed = null;
 
     		// If a full day is mentioned
     		// e.g. Monday all day
-    		if (fullAvailability.test(line) && !busyIndicator.test(line)) {
+    		if (alldayRegex.test(line) && !busyRegex.test(line)  && !beforeRegex.test(line) && !afterRegex.test(line)) {
     			parsed = distExports.parse(line, undefined, { forwardDate: true });
     			if (parsed.length > 0) {
     				let date = parsed[0].start.date();
     				availableTimes[parsed[0].start.get('weekday')] = [[new Date(date.getYear(), date.getMonth(), date.getDay(), MIN_HOUR), new Date(date.getYear(), date.getMonth(), date.getDay(), MAX_HOUR)]];
     			}		}
-
+    		
     		// Handle single or multiple times for day
     		// e.g. Monday 8-9am, 1-2pm, 3-4pm
+    			// Handle 'before' or 'after'
     		else {
 
+    			// Now, parse text with custom parser
     			// forwardDate (sets to only dates in the future) not working! no biggie for now because we are relying on day of week (0,1,2,3,4,5,6) for rendering, not dates (2/27 vs 3/6)
-
     			parsed = customChrono.parse(line, undefined, { forwardDate: true });
     			for (let i = 0; i < parsed.length; i++) {
     				if (!dayRegex.test(parsed[i]) && i > 0) {
@@ -10715,6 +10825,25 @@ var app = (function () {
     						parsed[i].end.assign('month', parsed[i-1].start.get('month'));
     					}
     				}
+    				// There is currently a bug in the parser (not the before/after code below), 
+    				// that doesn't parse the '4-5pm' in "monday before 11am, from 2-3pm, 4-5pm" correctly
+    				console.log(parsed);
+    				// need to check for before/after in the substring between the current parsed item and the previous parsed item.
+    				if (beforeRegex.test(parsed[i]) || 
+    						(i > 0 && beforeRegex.test(line.substring(parsed[i-1].index, line.substring(parsed[i].index))))) {
+    					parsed[i].end = parsed[i].start.clone();
+    					console.log();
+    					parsed[i].end.assign('hour', parsed[i].start.get('hour'));
+    					parsed[i].end.assign('minute', parsed[i].start.get('minute'));
+    					parsed[i].start.assign('hour', MIN_HOUR);
+    					parsed[i].start.assign('minute', 0);
+    				}
+    				else if (afterRegex.test(line) || 
+    						(i > 0 && afterRegex.test(line.substring(parsed[i-1].index, line.substring(parsed[i].index))))) {
+    					parsed[i].end = parsed[i].start.clone();
+    					parsed[i].end.assign('hour', MAX_HOUR);
+    					parsed[i].end.assign('minute', 0);
+    				}
 
     				if ('start' in parsed[i] && 'end' in parsed[i] && parsed[i].end != null) {
     					availableTimes[parsed[i].start.date().getDay()].push([parsed[i].start.date(), parsed[i].end.date()]);
@@ -10723,7 +10852,7 @@ var app = (function () {
     		// If they are free except for the times listed, invert the time blocks for that day
     		// e.g. Monday except 2-3pm
 
-    		if (busyIndicator.test(line)) {
+    		if (busyRegex.test(line)) {
     			let weekday = parsed[0].start.date().getDay();
 
     			let date = parsed[0].start.date();
@@ -10739,6 +10868,24 @@ var app = (function () {
     			availableTimes[weekday].push([startHourDate, endHourDate]);
     		}	}	console.log(availableTimes);
     	return availableTimes;
+    }
+    function makeTimeArr(timeMap){
+    	console.log('in time array');
+    	let timeArr = Array(24).fill(0).map(() => Array(7).fill(0));
+    	for (let i = 0; i<7; i++) {
+    		for(let j = 0; j<24; j++) {
+    			console.log(`timeMap ${timeMap[i]}`);
+    			for (let k = 0; k < timeMap[i].length; k++){
+    				// console.log(`time Arr[i][k]: ${timeArr[i]}`);
+    				console.log(timeMap[i][k][0].getHours());
+    				if (timeMap[i][k][0].getHours() <= j && timeMap[i][k][1].getHours() >= j){
+    					timeArr[j][i] = true;
+    				}
+    			}
+    		}
+    		
+    	}
+    	return timeArr
     }
 
     /* src/components/VoiceRecognition.svelte generated by Svelte v3.55.1 */
@@ -10951,36 +11098,36 @@ var app = (function () {
 
     function get_each_context$1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[4] = list[i];
-    	child_ctx[6] = i;
+    	child_ctx[3] = list[i];
+    	child_ctx[5] = i;
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[7] = list[i];
-    	child_ctx[9] = i;
+    	child_ctx[6] = list[i];
+    	child_ctx[8] = i;
     	return child_ctx;
     }
 
     function get_each_context_2(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[7] = list[i];
+    	child_ctx[6] = list[i];
     	return child_ctx;
     }
 
-    // (33:8) {#each dayArr as day}
+    // (33:9) {#each dayArr as day}
     function create_each_block_2(ctx) {
     	let th;
-    	let t_value = /*day*/ ctx[7] + "";
+    	let t_value = /*day*/ ctx[6] + "";
     	let t;
 
     	const block = {
     		c: function create() {
     			th = element("th");
     			t = text(t_value);
-    			attr_dev(th, "class", "svelte-hu10qh");
-    			add_location(th, file$1, 33, 8, 627);
+    			attr_dev(th, "class", "svelte-13ilgsv");
+    			add_location(th, file$1, 33, 9, 660);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, th, anchor);
@@ -10996,49 +11143,34 @@ var app = (function () {
     		block,
     		id: create_each_block_2.name,
     		type: "each",
-    		source: "(33:8) {#each dayArr as day}",
+    		source: "(33:9) {#each dayArr as day}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (39:8) {#each hour as day, j}
+    // (39:9) {#each hour as day, j}
     function create_each_block_1(ctx) {
     	let td;
-    	let mounted;
-    	let dispose;
-
-    	function click_handler() {
-    		return /*click_handler*/ ctx[3](/*i*/ ctx[6], /*j*/ ctx[9]);
-    	}
 
     	const block = {
     		c: function create() {
     			td = element("td");
-    			attr_dev(td, "class", "svelte-hu10qh");
-    			toggle_class(td, "available", /*day*/ ctx[7]);
-    			add_location(td, file$1, 40, 8, 818);
+    			attr_dev(td, "class", "svelte-13ilgsv");
+    			toggle_class(td, "available", /*day*/ ctx[6]);
+    			add_location(td, file$1, 40, 9, 858);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, td, anchor);
-
-    			if (!mounted) {
-    				dispose = listen_dev(td, "click", click_handler, false, false, false);
-    				mounted = true;
-    			}
     		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-
+    		p: function update(ctx, dirty) {
     			if (dirty & /*timeArr*/ 1) {
-    				toggle_class(td, "available", /*day*/ ctx[7]);
+    				toggle_class(td, "available", /*day*/ ctx[6]);
     			}
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(td);
-    			mounted = false;
-    			dispose();
     		}
     	};
 
@@ -11046,18 +11178,18 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(39:8) {#each hour as day, j}",
+    		source: "(39:9) {#each hour as day, j}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (37:8) {#each timeArr as hour, i}
+    // (37:9) {#each timeArr as hour, i}
     function create_each_block$1(ctx) {
     	let tr;
     	let t;
-    	let each_value_1 = /*hour*/ ctx[4];
+    	let each_value_1 = /*hour*/ ctx[3];
     	validate_each_argument(each_value_1);
     	let each_blocks = [];
 
@@ -11074,7 +11206,7 @@ var app = (function () {
     			}
 
     			t = space();
-    			add_location(tr, file$1, 37, 4, 711);
+    			add_location(tr, file$1, 37, 5, 748);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -11086,8 +11218,8 @@ var app = (function () {
     			append_dev(tr, t);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*timeArr, modifyAvail*/ 5) {
-    				each_value_1 = /*hour*/ ctx[4];
+    			if (dirty & /*timeArr*/ 1) {
+    				each_value_1 = /*hour*/ ctx[3];
     				validate_each_argument(each_value_1);
     				let i;
 
@@ -11120,7 +11252,7 @@ var app = (function () {
     		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(37:8) {#each timeArr as hour, i}",
+    		source: "(37:9) {#each timeArr as hour, i}",
     		ctx
     	});
 
@@ -11162,9 +11294,9 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			add_location(tr, file$1, 31, 4, 584);
-    			attr_dev(table, "class", "svelte-hu10qh");
-    			add_location(table, file$1, 30, 0, 572);
+    			add_location(tr, file$1, 31, 5, 615);
+    			attr_dev(table, "class", "svelte-13ilgsv");
+    			add_location(table, file$1, 30, 1, 602);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -11208,7 +11340,7 @@ var app = (function () {
     				each_blocks_1.length = each_value_2.length;
     			}
 
-    			if (dirty & /*timeArr, modifyAvail*/ 5) {
+    			if (dirty & /*timeArr*/ 1) {
     				each_value = /*timeArr*/ ctx[0];
     				validate_each_argument(each_value);
     				let i;
@@ -11256,7 +11388,7 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Table', slots, []);
     	let { timeArr } = $$props;
-    	const dayArr = ['Monday', "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    	const dayArr = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
     	function modifyAvail(i, j) {
     		$$invalidate(0, timeArr[i][j] = !timeArr[i][j], timeArr);
@@ -11274,8 +11406,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<Table> was created with unknown prop '${key}'`);
     	});
 
-    	const click_handler = (i, j) => modifyAvail(i, j);
-
     	$$self.$$set = $$props => {
     		if ('timeArr' in $$props) $$invalidate(0, timeArr = $$props.timeArr);
     	};
@@ -11290,7 +11420,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [timeArr, dayArr, modifyAvail, click_handler];
+    	return [timeArr, dayArr];
     }
 
     class Table extends SvelteComponentDev {
@@ -11322,36 +11452,124 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[11] = list[i];
+    	child_ctx[19] = list[i];
     	return child_ctx;
     }
 
-    // (85:3) {#each topTimesText as time}
+    // (1:0) <script>  import VoiceRecognition from './components/VoiceRecognition.svelte'  import {processText, makeTimeArr, getTopNIntervals}
+    function create_catch_block(ctx) {
+    	const block = { c: noop, m: noop, p: noop, d: noop };
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_catch_block.name,
+    		type: "catch",
+    		source: "(1:0) <script>  import VoiceRecognition from './components/VoiceRecognition.svelte'  import {processText, makeTimeArr, getTopNIntervals}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (123:3) {:then topTimes}
+    function create_then_block(ctx) {
+    	let each_1_anchor;
+    	let each_value = /*topTimes*/ ctx[18];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			each_1_anchor = empty();
+    		},
+    		m: function mount(target, anchor) {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(target, anchor);
+    			}
+
+    			insert_dev(target, each_1_anchor, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*topTimesText, dayArr*/ 12) {
+    				each_value = /*topTimes*/ ctx[18];
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value.length;
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			destroy_each(each_blocks, detaching);
+    			if (detaching) detach_dev(each_1_anchor);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_then_block.name,
+    		type: "then",
+    		source: "(123:3) {:then topTimes}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (124:3) {#each topTimes as time}
     function create_each_block(ctx) {
+    	let div;
     	let p;
     	let b;
-    	let t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[11].day] + "";
+    	let t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[19].day] + "";
     	let t0;
     	let t1;
-    	let t2_value = /*time*/ ctx[11].startTime + "";
+    	let t2_value = /*time*/ ctx[19].startTime + "";
     	let t2;
     	let t3;
-    	let t4_value = /*time*/ ctx[11].endTime + "";
+    	let t4_value = /*time*/ ctx[19].endTime + "";
     	let t4;
     	let t5;
     	let br0;
     	let t6;
-    	let t7_value = /*time*/ ctx[11].numUsers + "";
+    	let u;
+    	let t7_value = /*time*/ ctx[19].numUsers + "";
     	let t7;
     	let t8;
-    	let t9_value = /*time*/ ctx[11].users + "";
+    	let br1;
     	let t9;
+    	let t10_value = /*time*/ ctx[19].users + "";
     	let t10;
     	let t11;
-    	let br1;
+    	let t12;
+    	let br2;
 
     	const block = {
     		c: function create() {
+    			div = element("div");
     			p = element("p");
     			b = element("b");
     			t0 = text(t0_value);
@@ -11362,19 +11580,27 @@ var app = (function () {
     			t5 = space();
     			br0 = element("br");
     			t6 = space();
+    			u = element("u");
     			t7 = text(t7_value);
-    			t8 = text(" people (");
-    			t9 = text(t9_value);
-    			t10 = text(")");
-    			t11 = space();
+    			t8 = text(" people");
     			br1 = element("br");
-    			add_location(b, file, 86, 5, 2818);
-    			add_location(br0, file, 87, 5, 2883);
-    			add_location(p, file, 85, 4, 2809);
-    			add_location(br1, file, 90, 4, 2944);
+    			t9 = text("\n\t\t\t\t\t\t(");
+    			t10 = text(t10_value);
+    			t11 = text(")");
+    			t12 = space();
+    			br2 = element("br");
+    			add_location(b, file, 126, 6, 3911);
+    			add_location(br0, file, 127, 6, 3977);
+    			add_location(u, file, 128, 6, 3988);
+    			add_location(br1, file, 128, 35, 4017);
+    			add_location(p, file, 125, 5, 3901);
+    			attr_dev(div, "class", "top-time svelte-1q0ni7j");
+    			add_location(div, file, 124, 4, 3871);
+    			add_location(br2, file, 132, 4, 4068);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, p, anchor);
+    			insert_dev(target, div, anchor);
+    			append_dev(div, p);
     			append_dev(p, b);
     			append_dev(b, t0);
     			append_dev(b, t1);
@@ -11384,24 +11610,27 @@ var app = (function () {
     			append_dev(p, t5);
     			append_dev(p, br0);
     			append_dev(p, t6);
-    			append_dev(p, t7);
-    			append_dev(p, t8);
+    			append_dev(p, u);
+    			append_dev(u, t7);
+    			append_dev(u, t8);
+    			append_dev(p, br1);
     			append_dev(p, t9);
     			append_dev(p, t10);
-    			insert_dev(target, t11, anchor);
-    			insert_dev(target, br1, anchor);
+    			append_dev(p, t11);
+    			insert_dev(target, t12, anchor);
+    			insert_dev(target, br2, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*topTimesText*/ 4 && t0_value !== (t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[11].day] + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*topTimesText*/ 4 && t2_value !== (t2_value = /*time*/ ctx[11].startTime + "")) set_data_dev(t2, t2_value);
-    			if (dirty & /*topTimesText*/ 4 && t4_value !== (t4_value = /*time*/ ctx[11].endTime + "")) set_data_dev(t4, t4_value);
-    			if (dirty & /*topTimesText*/ 4 && t7_value !== (t7_value = /*time*/ ctx[11].numUsers + "")) set_data_dev(t7, t7_value);
-    			if (dirty & /*topTimesText*/ 4 && t9_value !== (t9_value = /*time*/ ctx[11].users + "")) set_data_dev(t9, t9_value);
+    			if (dirty & /*topTimesText*/ 4 && t0_value !== (t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[19].day] + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*topTimesText*/ 4 && t2_value !== (t2_value = /*time*/ ctx[19].startTime + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*topTimesText*/ 4 && t4_value !== (t4_value = /*time*/ ctx[19].endTime + "")) set_data_dev(t4, t4_value);
+    			if (dirty & /*topTimesText*/ 4 && t7_value !== (t7_value = /*time*/ ctx[19].numUsers + "")) set_data_dev(t7, t7_value);
+    			if (dirty & /*topTimesText*/ 4 && t10_value !== (t10_value = /*time*/ ctx[19].users + "")) set_data_dev(t10, t10_value);
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(p);
-    			if (detaching) detach_dev(t11);
-    			if (detaching) detach_dev(br1);
+    			if (detaching) detach_dev(div);
+    			if (detaching) detach_dev(t12);
+    			if (detaching) detach_dev(br2);
     		}
     	};
 
@@ -11409,7 +11638,37 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(85:3) {#each topTimesText as time}",
+    		source: "(124:3) {#each topTimes as time}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (121:24)      <p>Processing Times...</p>    {:then topTimes}
+    function create_pending_block(ctx) {
+    	let p;
+
+    	const block = {
+    		c: function create() {
+    			p = element("p");
+    			p.textContent = "Processing Times...";
+    			add_location(p, file, 121, 4, 3792);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, p, anchor);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(p);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_pending_block.name,
+    		type: "pending",
+    		source: "(121:24)      <p>Processing Times...</p>    {:then topTimes}",
     		ctx
     	});
 
@@ -11434,7 +11693,7 @@ var app = (function () {
     	let b1;
     	let t10;
     	let t11;
-    	let p;
+    	let p0;
     	let t12;
     	let u0;
     	let t14;
@@ -11455,23 +11714,26 @@ var app = (function () {
     	let i3;
     	let t28;
     	let t29;
+    	let p1;
+    	let t31;
     	let voicerecognition;
     	let updating_noteContent;
-    	let t30;
-    	let br2;
-    	let t31;
-    	let textarea;
     	let t32;
-    	let br3;
-    	let br4;
+    	let textarea;
     	let t33;
-    	let input1;
+    	let br2;
+    	let br3;
     	let t34;
-    	let br5;
+    	let input1;
     	let t35;
+    	let br4;
+    	let t36;
+    	let table;
+    	let t37;
     	let div1;
     	let h22;
-    	let t37;
+    	let t39;
+    	let promise;
     	let current;
     	let mounted;
     	let dispose;
@@ -11482,8 +11744,8 @@ var app = (function () {
 
     	let voicerecognition_props = {};
 
-    	if (/*text*/ ctx[1] !== void 0) {
-    		voicerecognition_props.noteContent = /*text*/ ctx[1];
+    	if (/*text*/ ctx[0] !== void 0) {
+    		voicerecognition_props.noteContent = /*text*/ ctx[0];
     	}
 
     	voicerecognition = new VoiceRecognition({
@@ -11492,13 +11754,26 @@ var app = (function () {
     		});
 
     	binding_callbacks.push(() => bind(voicerecognition, 'noteContent', voicerecognition_noteContent_binding));
-    	let each_value = /*topTimesText*/ ctx[2];
-    	validate_each_argument(each_value);
-    	let each_blocks = [];
 
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
-    	}
+    	table = new Table({
+    			props: {
+    				timeArr: makeTimeArr(processText(/*text*/ ctx[0]))
+    			},
+    			$$inline: true
+    		});
+
+    	let info = {
+    		ctx,
+    		current: null,
+    		token: null,
+    		hasCatch: false,
+    		pending: create_pending_block,
+    		then: create_then_block,
+    		catch: create_catch_block,
+    		value: 18
+    	};
+
+    	handle_promise(promise = /*topTimesText*/ ctx[2], info);
 
     	const block = {
     		c: function create() {
@@ -11524,7 +11799,7 @@ var app = (function () {
     			b1.textContent = "Type";
     			t10 = text(" your availablilty.");
     			t11 = space();
-    			p = element("p");
+    			p0 = element("p");
     			t12 = text("Start with the ");
     			u0 = element("u");
     			u0.textContent = "day of the week";
@@ -11552,66 +11827,65 @@ var app = (function () {
     			i3.textContent = "except 3-4pm";
     			t28 = text(", ...\"");
     			t29 = space();
-    			create_component(voicerecognition.$$.fragment);
-    			t30 = space();
-    			br2 = element("br");
+    			p1 = element("p");
+    			p1.textContent = "BE SURE TO INDICATE AM OR PM!";
     			t31 = space();
-    			textarea = element("textarea");
+    			create_component(voicerecognition.$$.fragment);
     			t32 = space();
-    			br3 = element("br");
-    			br4 = element("br");
+    			textarea = element("textarea");
     			t33 = space();
-    			input1 = element("input");
+    			br2 = element("br");
+    			br3 = element("br");
     			t34 = space();
-    			br5 = element("br");
+    			input1 = element("input");
     			t35 = space();
+    			br4 = element("br");
+    			t36 = space();
+    			create_component(table.$$.fragment);
+    			t37 = space();
     			div1 = element("div");
     			h22 = element("h2");
     			h22.textContent = "Top Times";
-    			t37 = space();
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			attr_dev(h1, "class", "svelte-1bhlskc");
-    			add_location(h1, file, 61, 1, 1923);
-    			add_location(h20, file, 64, 3, 2015);
-    			add_location(input0, file, 65, 3, 2033);
-    			add_location(h21, file, 66, 3, 2062);
-    			add_location(b0, file, 67, 7, 2110);
-    			add_location(b1, file, 67, 30, 2133);
-    			add_location(h4, file, 67, 3, 2106);
-    			add_location(u0, file, 68, 21, 2190);
-    			add_location(i0, file, 68, 60, 2229);
-    			add_location(br0, file, 68, 73, 2242);
-    			add_location(br1, file, 69, 3, 2250);
-    			add_location(u1, file, 69, 33, 2280);
-    			add_location(i1, file, 69, 47, 2294);
-    			add_location(i2, file, 69, 67, 2314);
-    			add_location(u2, file, 69, 85, 2332);
-    			add_location(i3, file, 69, 100, 2347);
-    			add_location(p, file, 68, 3, 2172);
-    			add_location(br2, file, 71, 3, 2447);
+    			t39 = space();
+    			info.block.c();
+    			attr_dev(h1, "class", "svelte-1q0ni7j");
+    			add_location(h1, file, 94, 1, 2815);
+    			add_location(h20, file, 97, 3, 2907);
+    			add_location(input0, file, 98, 3, 2925);
+    			add_location(h21, file, 99, 3, 2954);
+    			add_location(b0, file, 100, 7, 3002);
+    			add_location(b1, file, 100, 30, 3025);
+    			add_location(h4, file, 100, 3, 2998);
+    			add_location(u0, file, 101, 21, 3082);
+    			add_location(i0, file, 101, 60, 3121);
+    			add_location(br0, file, 101, 73, 3134);
+    			add_location(br1, file, 102, 3, 3142);
+    			add_location(u1, file, 102, 33, 3172);
+    			add_location(i1, file, 102, 47, 3186);
+    			add_location(i2, file, 102, 67, 3206);
+    			add_location(u2, file, 102, 85, 3224);
+    			add_location(i3, file, 102, 100, 3239);
+    			add_location(p0, file, 101, 3, 3064);
+    			add_location(p1, file, 104, 3, 3273);
     			attr_dev(textarea, "placeholder", "mon 9-10am, 2-3:45pm\nwed all day,\nthurs except 1-2pm,\nfri except 3-4pm and 5-6pm\n...");
-    			attr_dev(textarea, "class", "svelte-1bhlskc");
-    			add_location(textarea, file, 72, 3, 2455);
-    			add_location(br3, file, 77, 3, 2620);
-    			add_location(br4, file, 77, 7, 2624);
-    			attr_dev(input1, "class", "submit svelte-1bhlskc");
+    			attr_dev(textarea, "class", "svelte-1q0ni7j");
+    			add_location(textarea, file, 106, 3, 3380);
+    			add_location(br2, file, 111, 3, 3545);
+    			add_location(br3, file, 111, 7, 3549);
+    			attr_dev(input1, "class", "submit svelte-1q0ni7j");
     			attr_dev(input1, "type", "button");
     			input1.value = "Submit";
-    			add_location(input1, file, 78, 3, 2632);
-    			add_location(br5, file, 79, 3, 2705);
-    			attr_dev(div0, "class", "input-side svelte-1bhlskc");
-    			add_location(div0, file, 63, 2, 1987);
-    			add_location(h22, file, 83, 3, 2754);
-    			attr_dev(div1, "class", "top-times-side svelte-1bhlskc");
-    			add_location(div1, file, 82, 2, 2722);
-    			attr_dev(article, "class", "cf svelte-1bhlskc");
-    			add_location(article, file, 62, 1, 1964);
-    			attr_dev(main, "class", "svelte-1bhlskc");
-    			add_location(main, file, 60, 0, 1915);
+    			add_location(input1, file, 112, 3, 3557);
+    			add_location(br4, file, 113, 3, 3630);
+    			attr_dev(div0, "class", "input-side svelte-1q0ni7j");
+    			add_location(div0, file, 96, 2, 2879);
+    			add_location(h22, file, 119, 3, 3744);
+    			attr_dev(div1, "class", "top-times-side svelte-1q0ni7j");
+    			add_location(div1, file, 118, 2, 3712);
+    			attr_dev(article, "class", "cf svelte-1q0ni7j");
+    			add_location(article, file, 95, 1, 2856);
+    			attr_dev(main, "class", "svelte-1q0ni7j");
+    			add_location(main, file, 93, 0, 2807);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -11625,7 +11899,7 @@ var app = (function () {
     			append_dev(div0, h20);
     			append_dev(div0, t3);
     			append_dev(div0, input0);
-    			set_input_value(input0, /*name*/ ctx[0]);
+    			set_input_value(input0, /*name*/ ctx[1]);
     			append_dev(div0, t4);
     			append_dev(div0, h21);
     			append_dev(div0, t6);
@@ -11635,49 +11909,49 @@ var app = (function () {
     			append_dev(h4, b1);
     			append_dev(h4, t10);
     			append_dev(div0, t11);
-    			append_dev(div0, p);
-    			append_dev(p, t12);
-    			append_dev(p, u0);
-    			append_dev(p, t14);
-    			append_dev(p, i0);
-    			append_dev(p, t16);
-    			append_dev(p, br0);
-    			append_dev(p, t17);
-    			append_dev(p, br1);
-    			append_dev(p, t18);
-    			append_dev(p, u1);
-    			append_dev(p, t20);
-    			append_dev(p, i1);
-    			append_dev(p, t22);
-    			append_dev(p, i2);
-    			append_dev(p, t24);
-    			append_dev(p, u2);
-    			append_dev(p, t26);
-    			append_dev(p, i3);
-    			append_dev(p, t28);
+    			append_dev(div0, p0);
+    			append_dev(p0, t12);
+    			append_dev(p0, u0);
+    			append_dev(p0, t14);
+    			append_dev(p0, i0);
+    			append_dev(p0, t16);
+    			append_dev(p0, br0);
+    			append_dev(p0, t17);
+    			append_dev(p0, br1);
+    			append_dev(p0, t18);
+    			append_dev(p0, u1);
+    			append_dev(p0, t20);
+    			append_dev(p0, i1);
+    			append_dev(p0, t22);
+    			append_dev(p0, i2);
+    			append_dev(p0, t24);
+    			append_dev(p0, u2);
+    			append_dev(p0, t26);
+    			append_dev(p0, i3);
+    			append_dev(p0, t28);
     			append_dev(div0, t29);
-    			mount_component(voicerecognition, div0, null);
-    			append_dev(div0, t30);
-    			append_dev(div0, br2);
+    			append_dev(div0, p1);
     			append_dev(div0, t31);
-    			append_dev(div0, textarea);
-    			set_input_value(textarea, /*text*/ ctx[1]);
+    			mount_component(voicerecognition, div0, null);
     			append_dev(div0, t32);
-    			append_dev(div0, br3);
-    			append_dev(div0, br4);
+    			append_dev(div0, textarea);
+    			set_input_value(textarea, /*text*/ ctx[0]);
     			append_dev(div0, t33);
-    			append_dev(div0, input1);
+    			append_dev(div0, br2);
+    			append_dev(div0, br3);
     			append_dev(div0, t34);
-    			append_dev(div0, br5);
-    			append_dev(article, t35);
+    			append_dev(div0, input1);
+    			append_dev(div0, t35);
+    			append_dev(div0, br4);
+    			append_dev(div0, t36);
+    			mount_component(table, div0, null);
+    			append_dev(article, t37);
     			append_dev(article, div1);
     			append_dev(div1, h22);
-    			append_dev(div1, t37);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div1, null);
-    			}
-
+    			append_dev(div1, t39);
+    			info.block.m(div1, info.anchor = null);
+    			info.mount = () => div1;
+    			info.anchor = null;
     			current = true;
 
     			if (!mounted) {
@@ -11691,62 +11965,54 @@ var app = (function () {
     				mounted = true;
     			}
     		},
-    		p: function update(ctx, [dirty]) {
-    			if (dirty & /*name*/ 1 && input0.value !== /*name*/ ctx[0]) {
-    				set_input_value(input0, /*name*/ ctx[0]);
+    		p: function update(new_ctx, [dirty]) {
+    			ctx = new_ctx;
+
+    			if (dirty & /*name*/ 2 && input0.value !== /*name*/ ctx[1]) {
+    				set_input_value(input0, /*name*/ ctx[1]);
     			}
 
     			const voicerecognition_changes = {};
 
-    			if (!updating_noteContent && dirty & /*text*/ 2) {
+    			if (!updating_noteContent && dirty & /*text*/ 1) {
     				updating_noteContent = true;
-    				voicerecognition_changes.noteContent = /*text*/ ctx[1];
+    				voicerecognition_changes.noteContent = /*text*/ ctx[0];
     				add_flush_callback(() => updating_noteContent = false);
     			}
 
     			voicerecognition.$set(voicerecognition_changes);
 
-    			if (dirty & /*text*/ 2) {
-    				set_input_value(textarea, /*text*/ ctx[1]);
+    			if (dirty & /*text*/ 1) {
+    				set_input_value(textarea, /*text*/ ctx[0]);
     			}
 
-    			if (dirty & /*topTimesText, dayArr*/ 12) {
-    				each_value = /*topTimesText*/ ctx[2];
-    				validate_each_argument(each_value);
-    				let i;
+    			const table_changes = {};
+    			if (dirty & /*text*/ 1) table_changes.timeArr = makeTimeArr(processText(/*text*/ ctx[0]));
+    			table.$set(table_changes);
+    			info.ctx = ctx;
 
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    					} else {
-    						each_blocks[i] = create_each_block(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(div1, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-
-    				each_blocks.length = each_value.length;
+    			if (dirty & /*topTimesText*/ 4 && promise !== (promise = /*topTimesText*/ ctx[2]) && handle_promise(promise, info)) ; else {
+    				update_await_block_branch(info, ctx, dirty);
     			}
     		},
     		i: function intro(local) {
     			if (current) return;
     			transition_in(voicerecognition.$$.fragment, local);
+    			transition_in(table.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(voicerecognition.$$.fragment, local);
+    			transition_out(table.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(main);
     			destroy_component(voicerecognition);
-    			destroy_each(each_blocks, detaching);
+    			destroy_component(table);
+    			info.block.d();
+    			info.token = null;
+    			info = null;
     			mounted = false;
     			run_all(dispose);
     		}
@@ -11763,7 +12029,10 @@ var app = (function () {
     	return block;
     }
 
-    function topTimesToText(topIntervals) {
+    async function topTimesToText(topIntervalsPromise) {
+    	console.log({ topIntervalsPromise });
+    	let topIntervals = await topIntervalsPromise;
+    	console.log({ topIntervals });
     	let topTimesText = [];
 
     	topIntervals.forEach(interval => {
@@ -11780,27 +12049,23 @@ var app = (function () {
     	return topTimesText;
     }
 
-    function getAllUserTimes() {
-    	let userTimes = [];
-
-    	for (let i = 0; i < localStorage.length; i++) {
-    		userTimes.push(JSON.parse(localStorage.getItem(i)));
-    	}
-    	console.log(userTimes);
-    	return userTimes;
-    }
-
     function instance($$self, $$props, $$invalidate) {
+    	let timeArr;
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('App', slots, []);
     	const dayArr = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    	let voiceText = '';
+    	let typedText = '';
     	let name = '';
     	let text = '';
     	let availableTimes = null;
+    	let API_BASE = 'http://localhost:3001';
 
-    	// If you want to reset database, uncomment this line and run app
-    	// localStorage.clear();
+    	// localStorage.clear()
     	let topIntervals = getTopNIntervals(getAllUserTimes(), 5);
+
+    	// postTimes('Bobby', {});
+    	getTimes();
 
     	console.log(topIntervals);
     	let topTimesText = topTimesToText(topIntervals);
@@ -11810,13 +12075,48 @@ var app = (function () {
     		availableTimes = processText(text);
     	}
 
-    	function submit() {
-    		availableTimes = processText(text);
-    		const userID = localStorage.length;
-    		let userData = { id: userID, name, availableTimes };
-    		localStorage.setItem(userID, JSON.stringify(userData));
-    		$$invalidate(2, topTimesText = topTimesToText(getTopNIntervals(getAllUserTimes(), 5)));
-    		$$invalidate(0, name = '');
+    	async function getTimes() {
+    		const data = await (await fetch(API_BASE + '/userTimes')).json();
+    		return data;
+    	}
+
+    	async function postTimes(username, userTimes) {
+    		const strUserTimes = JSON.stringify(userTimes);
+
+    		const requestOptions = {
+    			method: 'POST',
+    			headers: { 'Content-Type': 'application/json' },
+    			body: JSON.stringify({ name: username, times: strUserTimes })
+    		};
+
+    		const data = await (await fetch(API_BASE + '/userTimes', requestOptions)).json();
+    		console.log(data);
+    	}
+
+    	async function submit() {
+    		if (name === '') {
+    			alert('please include name!');
+    		} else {
+    			availableTimes = processText(text);
+    			postTimes(name, availableTimes);
+    			let userTimes = await getAllUserTimes();
+    			$$invalidate(2, topTimesText = topTimesToText(getTopNIntervals(userTimes, 5)));
+    			$$invalidate(1, name = '');
+    			$$invalidate(0, text = '');
+    		}
+    	}
+
+    	async function getAllUserTimes() {
+    		let userTimes = [];
+    		let payload = await getTimes();
+    		console.log({ payload });
+
+    		for (let i = 0; i < payload.length; i++) {
+    			console.log(`getting user times: ${JSON.parse(payload[i].times)}`);
+    			userTimes.push(JSON.parse(payload[i].times));
+    		}
+    		console.log(userTimes);
+    		return userTimes;
     	}
     	const writable_props = [];
 
@@ -11826,51 +12126,70 @@ var app = (function () {
 
     	function input0_input_handler() {
     		name = this.value;
-    		$$invalidate(0, name);
+    		$$invalidate(1, name);
     	}
 
     	function voicerecognition_noteContent_binding(value) {
     		text = value;
-    		$$invalidate(1, text);
+    		$$invalidate(0, text);
     	}
 
     	function textarea_input_handler() {
     		text = this.value;
-    		$$invalidate(1, text);
+    		$$invalidate(0, text);
     	}
 
     	$$self.$capture_state = () => ({
     		VoiceRecognition,
     		processText,
+    		makeTimeArr,
     		getTopNIntervals,
     		Table,
     		dayArr,
+    		voiceText,
+    		typedText,
     		name,
     		text,
     		availableTimes,
+    		API_BASE,
     		topIntervals,
     		topTimesText,
     		topTimesToText,
     		handleInput,
+    		getTimes,
+    		postTimes,
     		submit,
-    		getAllUserTimes
+    		getAllUserTimes,
+    		timeArr
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ('name' in $$props) $$invalidate(0, name = $$props.name);
-    		if ('text' in $$props) $$invalidate(1, text = $$props.text);
+    		if ('voiceText' in $$props) voiceText = $$props.voiceText;
+    		if ('typedText' in $$props) typedText = $$props.typedText;
+    		if ('name' in $$props) $$invalidate(1, name = $$props.name);
+    		if ('text' in $$props) $$invalidate(0, text = $$props.text);
     		if ('availableTimes' in $$props) availableTimes = $$props.availableTimes;
+    		if ('API_BASE' in $$props) API_BASE = $$props.API_BASE;
     		if ('topIntervals' in $$props) topIntervals = $$props.topIntervals;
     		if ('topTimesText' in $$props) $$invalidate(2, topTimesText = $$props.topTimesText);
+    		if ('timeArr' in $$props) timeArr = $$props.timeArr;
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*text*/ 1) {
+    			timeArr = text
+    			? makeTimeArr(processText(text))
+    			: Array(24).fill(0).map(() => Array(7).fill(0));
+    		}
+    	};
+
     	return [
-    		name,
     		text,
+    		name,
     		topTimesText,
     		dayArr,
     		handleInput,
