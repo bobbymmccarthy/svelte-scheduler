@@ -11448,7 +11448,7 @@ var app = (function () {
     	return block;
     }
 
-    // (129:3) {:then topTimes}
+    // (130:3) {:then topTimes}
     function create_then_block(ctx) {
     	let each_1_anchor;
     	let each_value = /*topTimes*/ ctx[18];
@@ -11509,14 +11509,14 @@ var app = (function () {
     		block,
     		id: create_then_block.name,
     		type: "then",
-    		source: "(129:3) {:then topTimes}",
+    		source: "(130:3) {:then topTimes}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (130:3) {#each topTimes as time}
+    // (131:3) {#each topTimes as time}
     function create_each_block(ctx) {
     	let div;
     	let p;
@@ -11566,14 +11566,14 @@ var app = (function () {
     			t11 = text(")");
     			t12 = space();
     			br2 = element("br");
-    			add_location(b, file, 132, 6, 4073);
-    			add_location(br0, file, 133, 6, 4139);
-    			add_location(u, file, 134, 6, 4150);
-    			add_location(br1, file, 134, 35, 4179);
-    			add_location(p, file, 131, 5, 4063);
+    			add_location(b, file, 133, 6, 4100);
+    			add_location(br0, file, 134, 6, 4166);
+    			add_location(u, file, 135, 6, 4177);
+    			add_location(br1, file, 135, 35, 4206);
+    			add_location(p, file, 132, 5, 4090);
     			attr_dev(div, "class", "top-time svelte-12zk8r6");
-    			add_location(div, file, 130, 4, 4033);
-    			add_location(br2, file, 138, 4, 4230);
+    			add_location(div, file, 131, 4, 4060);
+    			add_location(br2, file, 139, 4, 4257);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -11615,14 +11615,14 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(130:3) {#each topTimes as time}",
+    		source: "(131:3) {#each topTimes as time}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (127:24)      <p>Processing Times...</p>    {:then topTimes}
+    // (128:24)      <p>Processing Times...</p>    {:then topTimes}
     function create_pending_block(ctx) {
     	let p;
 
@@ -11630,7 +11630,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Processing Times...";
-    			add_location(p, file, 127, 4, 3954);
+    			add_location(p, file, 128, 4, 3981);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -11645,7 +11645,7 @@ var app = (function () {
     		block,
     		id: create_pending_block.name,
     		type: "pending",
-    		source: "(127:24)      <p>Processing Times...</p>    {:then topTimes}",
+    		source: "(128:24)      <p>Processing Times...</p>    {:then topTimes}",
     		ctx
     	});
 
@@ -11826,43 +11826,43 @@ var app = (function () {
     			t39 = space();
     			info.block.c();
     			attr_dev(h1, "class", "svelte-12zk8r6");
-    			add_location(h1, file, 102, 1, 2979);
-    			add_location(h20, file, 105, 3, 3071);
-    			add_location(input0, file, 106, 3, 3089);
-    			add_location(h21, file, 107, 3, 3118);
-    			add_location(b0, file, 108, 7, 3166);
-    			add_location(b1, file, 108, 30, 3189);
-    			add_location(h4, file, 108, 3, 3162);
-    			add_location(u0, file, 109, 21, 3246);
-    			add_location(i0, file, 109, 60, 3285);
-    			add_location(br0, file, 109, 73, 3298);
-    			add_location(br1, file, 110, 3, 3306);
-    			add_location(u1, file, 110, 33, 3336);
-    			add_location(i1, file, 110, 47, 3350);
-    			add_location(i2, file, 110, 67, 3370);
-    			add_location(u2, file, 110, 85, 3388);
-    			add_location(i3, file, 110, 100, 3403);
-    			add_location(p0, file, 109, 3, 3228);
-    			add_location(p1, file, 111, 3, 3436);
+    			add_location(h1, file, 103, 1, 3006);
+    			add_location(h20, file, 106, 3, 3098);
+    			add_location(input0, file, 107, 3, 3116);
+    			add_location(h21, file, 108, 3, 3145);
+    			add_location(b0, file, 109, 7, 3193);
+    			add_location(b1, file, 109, 30, 3216);
+    			add_location(h4, file, 109, 3, 3189);
+    			add_location(u0, file, 110, 21, 3273);
+    			add_location(i0, file, 110, 60, 3312);
+    			add_location(br0, file, 110, 73, 3325);
+    			add_location(br1, file, 111, 3, 3333);
+    			add_location(u1, file, 111, 33, 3363);
+    			add_location(i1, file, 111, 47, 3377);
+    			add_location(i2, file, 111, 67, 3397);
+    			add_location(u2, file, 111, 85, 3415);
+    			add_location(i3, file, 111, 100, 3430);
+    			add_location(p0, file, 110, 3, 3255);
+    			add_location(p1, file, 112, 3, 3463);
     			attr_dev(textarea, "placeholder", "mon 9-10am, 2-3:45pm\nwed all day,\nthurs except 1-2pm,\nfri except 3-4pm and 5-6pm\n...");
     			attr_dev(textarea, "class", "svelte-12zk8r6");
-    			add_location(textarea, file, 113, 3, 3543);
-    			add_location(br2, file, 118, 3, 3708);
-    			add_location(br3, file, 118, 7, 3712);
+    			add_location(textarea, file, 114, 3, 3570);
+    			add_location(br2, file, 119, 3, 3735);
+    			add_location(br3, file, 119, 7, 3739);
     			attr_dev(input1, "class", "submit svelte-12zk8r6");
     			attr_dev(input1, "type", "button");
     			input1.value = "Submit";
-    			add_location(input1, file, 119, 3, 3720);
-    			add_location(br4, file, 120, 3, 3793);
+    			add_location(input1, file, 120, 3, 3747);
+    			add_location(br4, file, 121, 3, 3820);
     			attr_dev(div0, "class", "input-side svelte-12zk8r6");
-    			add_location(div0, file, 104, 2, 3043);
-    			add_location(h22, file, 125, 3, 3906);
+    			add_location(div0, file, 105, 2, 3070);
+    			add_location(h22, file, 126, 3, 3933);
     			attr_dev(div1, "class", "top-times-side svelte-12zk8r6");
-    			add_location(div1, file, 124, 2, 3874);
+    			add_location(div1, file, 125, 2, 3901);
     			attr_dev(article, "class", "cf svelte-12zk8r6");
-    			add_location(article, file, 103, 1, 3020);
+    			add_location(article, file, 104, 1, 3047);
     			attr_dev(main, "class", "svelte-12zk8r6");
-    			add_location(main, file, 101, 0, 2971);
+    			add_location(main, file, 102, 0, 2998);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -12082,6 +12082,8 @@ var app = (function () {
     			$$invalidate(1, name = '');
     			$$invalidate(0, text = '');
     		}
+
+    		window.location.reload();
     	}
 
     	async function getAllUserTimes(allInfo = false) {

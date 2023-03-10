@@ -75,6 +75,7 @@
 			name = '';
 			text = '';
 		}
+		window.location.reload()
 		
 	};
 
