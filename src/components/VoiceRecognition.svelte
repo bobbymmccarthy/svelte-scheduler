@@ -1,4 +1,5 @@
 <script>
+  // used https://github.com/karkranikhil/voice-notes to learn how to use web speech api in svelte
   import Recorder from "./Recorder.svelte";
   import {processText} from '../helpers.js';
 

@@ -12,7 +12,7 @@
 
 	// localStorage.clear()
 
-	let topIntervals = getTopNIntervals(getAllUserTimes(), 5);
+	let topIntervals = getTopNIntervals(getAllUserTimes(true), 5);
 	// postTimes('Bobby', {});
 	getTimes();
 	
@@ -57,6 +57,7 @@
 		}
 		const data = await(await fetch(API_BASE+ '/userTimes', requestOptions)).json()
 		console.log(data)
+		return data
 	}
 	
 
@@ -67,23 +68,30 @@
 		else{
 			availableTimes = processText(text);
 			postTimes(name, availableTimes);
-			let userTimes = await getAllUserTimes();
+			let userTimes = await getAllUserTimes(true);
 			topTimesText = topTimesToText(getTopNIntervals(userTimes, 5));
 			name = '';
 			text = '';
 		}
+		window.location.reload()
 		
 	};
 
-	async function getAllUserTimes() {
+	async function getAllUserTimes(allInfo = false) {
 		let userTimes = [];
 		let payload = await getTimes();
 		console.log({payload})
 		for (let i = 0; i < payload.length; i++) {
 			console.log(`getting user times: ${JSON.parse(payload[i].times)}`)
-	      	userTimes.push(JSON.parse(payload[i].times));
+			if (allInfo){
+				userTimes.push({name: payload[i].name,times:JSON.parse(payload[i].times)});
+			}
+			else{
+				userTimes.push(JSON.parse(payload[i].times));
+			}
+	      	
         };
-		console.log(userTimes)
+		// console.log(userTimes)
 		return userTimes
 	};
 

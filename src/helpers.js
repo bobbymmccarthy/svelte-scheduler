@@ -2,9 +2,9 @@ import * as chrono from 'chrono-node';
 
 const shortHandDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const dayRegex = /mon|tue|wed|thu|fri|sat|sun/;
-const alldayRegex =/all day|anytime|any time|whenever/
-const busyRegex = /except|besides|apart/
-const beforeRegex =/before/
+const alldayRegex =/all day|anytime|any time|whenever/;
+const busyRegex = /except|besides|apart/;
+const beforeRegex =/before/;
 const afterRegex = /after/
 const customChrono = chrono.casual.clone();
 
@@ -36,7 +36,7 @@ async function createSharedCalendar(userTimes) {
 	userTimesPayload.forEach(obj => {
 		if (obj) {
 			let user = obj['name'];
-			let availableTimes = obj['availableTimes'];
+			let availableTimes = obj['times'];
 			if (availableTimes) {
 				for (const [day, availableBlocks] of Object.entries(availableTimes)) {
 			  availableBlocks.forEach(block => {
@@ -202,8 +202,6 @@ function processText(text) {
 		availableTimes[i] = [];
 	};
 
-	const fullAvailability =/all day|anytime|any time|whenever/
-	const busyIndicator = /except|besides|apart/
 
 	for (let i = 0; i < lines.length; i++) {
 		let line = lines[i];

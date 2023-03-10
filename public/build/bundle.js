@@ -1,5 +1,5 @@
 
-(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
+(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35730/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 var app = (function () {
     'use strict';
 
@@ -576,7 +576,7 @@ var app = (function () {
     const { console: console_1$1 } = globals;
     const file$2 = "src/components/Recorder.svelte";
 
-    // (31:4) {#if isActive}
+    // (32:4) {#if isActive}
     function create_if_block(ctx) {
     	let p;
 
@@ -584,7 +584,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Recording...";
-    			add_location(p, file$2, 31, 6, 914);
+    			add_location(p, file$2, 32, 6, 1015);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -598,7 +598,7 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(31:4) {#if isActive}",
+    		source: "(32:4) {#if isActive}",
     		ctx
     	});
 
@@ -629,9 +629,9 @@ var app = (function () {
     			if (if_block) if_block.c();
     			attr_dev(button0, "border", "2px solid black");
     			attr_dev(button0, "background-color", "orange");
-    			add_location(button0, file$2, 27, 4, 614);
-    			add_location(button1, file$2, 28, 4, 755);
-    			add_location(div, file$2, 26, 0, 604);
+    			add_location(button0, file$2, 28, 4, 715);
+    			add_location(button1, file$2, 29, 4, 856);
+    			add_location(div, file$2, 27, 0, 705);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -10651,7 +10651,7 @@ var app = (function () {
     	userTimesPayload.forEach(obj => {
     		if (obj) {
     			let user = obj['name'];
-    			let availableTimes = obj['availableTimes'];
+    			let availableTimes = obj['times'];
     			if (availableTimes) {
     				for (const [day, availableBlocks] of Object.entries(availableTimes)) {
     			  availableBlocks.forEach(block => {
@@ -10793,6 +10793,7 @@ var app = (function () {
     	for (let i = 0; i < 7; i++) {
     		availableTimes[i] = [];
     	}
+
     	for (let i = 0; i < lines.length; i++) {
     		let line = lines[i];
     		console.log(lines[i]);
@@ -11471,7 +11472,7 @@ var app = (function () {
     	return block;
     }
 
-    // (123:3) {:then topTimes}
+    // (131:3) {:then topTimes}
     function create_then_block(ctx) {
     	let each_1_anchor;
     	let each_value = /*topTimes*/ ctx[18];
@@ -11532,14 +11533,14 @@ var app = (function () {
     		block,
     		id: create_then_block.name,
     		type: "then",
-    		source: "(123:3) {:then topTimes}",
+    		source: "(131:3) {:then topTimes}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (124:3) {#each topTimes as time}
+    // (132:3) {#each topTimes as time}
     function create_each_block(ctx) {
     	let div;
     	let p;
@@ -11589,14 +11590,14 @@ var app = (function () {
     			t11 = text(")");
     			t12 = space();
     			br2 = element("br");
-    			add_location(b, file, 126, 6, 3911);
-    			add_location(br0, file, 127, 6, 3977);
-    			add_location(u, file, 128, 6, 3988);
-    			add_location(br1, file, 128, 35, 4017);
-    			add_location(p, file, 125, 5, 3901);
+    			add_location(b, file, 134, 6, 4099);
+    			add_location(br0, file, 135, 6, 4165);
+    			add_location(u, file, 136, 6, 4176);
+    			add_location(br1, file, 136, 35, 4205);
+    			add_location(p, file, 133, 5, 4089);
     			attr_dev(div, "class", "top-time svelte-1q0ni7j");
-    			add_location(div, file, 124, 4, 3871);
-    			add_location(br2, file, 132, 4, 4068);
+    			add_location(div, file, 132, 4, 4059);
+    			add_location(br2, file, 140, 4, 4256);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -11638,14 +11639,14 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(124:3) {#each topTimes as time}",
+    		source: "(132:3) {#each topTimes as time}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (121:24)      <p>Processing Times...</p>    {:then topTimes}
+    // (129:24)      <p>Processing Times...</p>    {:then topTimes}
     function create_pending_block(ctx) {
     	let p;
 
@@ -11653,7 +11654,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Processing Times...";
-    			add_location(p, file, 121, 4, 3792);
+    			add_location(p, file, 129, 4, 3980);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -11668,7 +11669,7 @@ var app = (function () {
     		block,
     		id: create_pending_block.name,
     		type: "pending",
-    		source: "(121:24)      <p>Processing Times...</p>    {:then topTimes}",
+    		source: "(129:24)      <p>Processing Times...</p>    {:then topTimes}",
     		ctx
     	});
 
@@ -11849,43 +11850,43 @@ var app = (function () {
     			t39 = space();
     			info.block.c();
     			attr_dev(h1, "class", "svelte-1q0ni7j");
-    			add_location(h1, file, 94, 1, 2815);
-    			add_location(h20, file, 97, 3, 2907);
-    			add_location(input0, file, 98, 3, 2925);
-    			add_location(h21, file, 99, 3, 2954);
-    			add_location(b0, file, 100, 7, 3002);
-    			add_location(b1, file, 100, 30, 3025);
-    			add_location(h4, file, 100, 3, 2998);
-    			add_location(u0, file, 101, 21, 3082);
-    			add_location(i0, file, 101, 60, 3121);
-    			add_location(br0, file, 101, 73, 3134);
-    			add_location(br1, file, 102, 3, 3142);
-    			add_location(u1, file, 102, 33, 3172);
-    			add_location(i1, file, 102, 47, 3186);
-    			add_location(i2, file, 102, 67, 3206);
-    			add_location(u2, file, 102, 85, 3224);
-    			add_location(i3, file, 102, 100, 3239);
-    			add_location(p0, file, 101, 3, 3064);
-    			add_location(p1, file, 104, 3, 3273);
+    			add_location(h1, file, 102, 1, 3003);
+    			add_location(h20, file, 105, 3, 3095);
+    			add_location(input0, file, 106, 3, 3113);
+    			add_location(h21, file, 107, 3, 3142);
+    			add_location(b0, file, 108, 7, 3190);
+    			add_location(b1, file, 108, 30, 3213);
+    			add_location(h4, file, 108, 3, 3186);
+    			add_location(u0, file, 109, 21, 3270);
+    			add_location(i0, file, 109, 60, 3309);
+    			add_location(br0, file, 109, 73, 3322);
+    			add_location(br1, file, 110, 3, 3330);
+    			add_location(u1, file, 110, 33, 3360);
+    			add_location(i1, file, 110, 47, 3374);
+    			add_location(i2, file, 110, 67, 3394);
+    			add_location(u2, file, 110, 85, 3412);
+    			add_location(i3, file, 110, 100, 3427);
+    			add_location(p0, file, 109, 3, 3252);
+    			add_location(p1, file, 112, 3, 3461);
     			attr_dev(textarea, "placeholder", "mon 9-10am, 2-3:45pm\nwed all day,\nthurs except 1-2pm,\nfri except 3-4pm and 5-6pm\n...");
     			attr_dev(textarea, "class", "svelte-1q0ni7j");
-    			add_location(textarea, file, 106, 3, 3380);
-    			add_location(br2, file, 111, 3, 3545);
-    			add_location(br3, file, 111, 7, 3549);
+    			add_location(textarea, file, 114, 3, 3568);
+    			add_location(br2, file, 119, 3, 3733);
+    			add_location(br3, file, 119, 7, 3737);
     			attr_dev(input1, "class", "submit svelte-1q0ni7j");
     			attr_dev(input1, "type", "button");
     			input1.value = "Submit";
-    			add_location(input1, file, 112, 3, 3557);
-    			add_location(br4, file, 113, 3, 3630);
+    			add_location(input1, file, 120, 3, 3745);
+    			add_location(br4, file, 121, 3, 3818);
     			attr_dev(div0, "class", "input-side svelte-1q0ni7j");
-    			add_location(div0, file, 96, 2, 2879);
-    			add_location(h22, file, 119, 3, 3744);
+    			add_location(div0, file, 104, 2, 3067);
+    			add_location(h22, file, 127, 3, 3932);
     			attr_dev(div1, "class", "top-times-side svelte-1q0ni7j");
-    			add_location(div1, file, 118, 2, 3712);
+    			add_location(div1, file, 126, 2, 3900);
     			attr_dev(article, "class", "cf svelte-1q0ni7j");
-    			add_location(article, file, 95, 1, 2856);
+    			add_location(article, file, 103, 1, 3044);
     			attr_dev(main, "class", "svelte-1q0ni7j");
-    			add_location(main, file, 93, 0, 2807);
+    			add_location(main, file, 101, 0, 2995);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -12062,7 +12063,7 @@ var app = (function () {
     	let API_BASE = 'http://localhost:3001';
 
     	// localStorage.clear()
-    	let topIntervals = getTopNIntervals(getAllUserTimes(), 5);
+    	let topIntervals = getTopNIntervals(getAllUserTimes(true), 5);
 
     	// postTimes('Bobby', {});
     	getTimes();
@@ -12091,6 +12092,7 @@ var app = (function () {
 
     		const data = await (await fetch(API_BASE + '/userTimes', requestOptions)).json();
     		console.log(data);
+    		return data;
     	}
 
     	async function submit() {
@@ -12099,23 +12101,34 @@ var app = (function () {
     		} else {
     			availableTimes = processText(text);
     			postTimes(name, availableTimes);
-    			let userTimes = await getAllUserTimes();
+    			let userTimes = await getAllUserTimes(true);
     			$$invalidate(2, topTimesText = topTimesToText(getTopNIntervals(userTimes, 5)));
     			$$invalidate(1, name = '');
     			$$invalidate(0, text = '');
     		}
+
+    		window.location.reload();
     	}
 
-    	async function getAllUserTimes() {
+    	async function getAllUserTimes(allInfo = false) {
     		let userTimes = [];
     		let payload = await getTimes();
     		console.log({ payload });
 
     		for (let i = 0; i < payload.length; i++) {
     			console.log(`getting user times: ${JSON.parse(payload[i].times)}`);
-    			userTimes.push(JSON.parse(payload[i].times));
+
+    			if (allInfo) {
+    				userTimes.push({
+    					name: payload[i].name,
+    					times: JSON.parse(payload[i].times)
+    				});
+    			} else {
+    				userTimes.push(JSON.parse(payload[i].times));
+    			}
     		}
-    		console.log(userTimes);
+
+    		// console.log(userTimes)
     		return userTimes;
     	}
     	const writable_props = [];
