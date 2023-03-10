@@ -1,4 +1,5 @@
 <script>
+    // used https://github.com/karkranikhil/voice-notes to learn how to use web speech api in svelte
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
   

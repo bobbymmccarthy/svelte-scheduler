@@ -10624,6 +10624,10 @@ var app = (function () {
     const shortHandDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayRegex = /mon|tue|wed|thu|fri|sat|sun/;
     const customChrono = distExports.casual.clone();
+    const beforeRegex =/before/;
+    const afterRegex = /after/;
+    const alldayRegex =/all day|anytime|any time|whenever/;
+    const busyRegex = /except|besides|apart/;
 
     let MIN_HOUR = 9;
     let MAX_HOUR = 22;
@@ -10788,28 +10792,28 @@ var app = (function () {
     	for (let i = 0; i < 7; i++) {
     		availableTimes[i] = [];
     	}
-    	const fullAvailability =/all day|anytime|any time|whenever/;
-    	const busyIndicator = /except|besides|apart/;
 
     	for (let i = 0; i < lines.length; i++) {
     		let line = lines[i];
+    		console.log(lines[i]);
     		let parsed = null;
 
     		// If a full day is mentioned
     		// e.g. Monday all day
-    		if (fullAvailability.test(line) && !busyIndicator.test(line)) {
+    		if (alldayRegex.test(line) && !busyRegex.test(line)  && !beforeRegex.test(line) && !afterRegex.test(line)) {
     			parsed = distExports.parse(line, undefined, { forwardDate: true });
     			if (parsed.length > 0) {
     				let date = parsed[0].start.date();
     				availableTimes[parsed[0].start.get('weekday')] = [[new Date(date.getYear(), date.getMonth(), date.getDay(), MIN_HOUR), new Date(date.getYear(), date.getMonth(), date.getDay(), MAX_HOUR)]];
     			}		}
-
+    		
     		// Handle single or multiple times for day
     		// e.g. Monday 8-9am, 1-2pm, 3-4pm
+    			// Handle 'before' or 'after'
     		else {
 
+    			// Now, parse text with custom parser
     			// forwardDate (sets to only dates in the future) not working! no biggie for now because we are relying on day of week (0,1,2,3,4,5,6) for rendering, not dates (2/27 vs 3/6)
-
     			parsed = customChrono.parse(line, undefined, { forwardDate: true });
     			for (let i = 0; i < parsed.length; i++) {
     				if (!dayRegex.test(parsed[i]) && i > 0) {
@@ -10821,6 +10825,25 @@ var app = (function () {
     						parsed[i].end.assign('month', parsed[i-1].start.get('month'));
     					}
     				}
+    				// There is currently a bug in the parser (not the before/after code below), 
+    				// that doesn't parse the '4-5pm' in "monday before 11am, from 2-3pm, 4-5pm" correctly
+    				console.log(parsed);
+    				// need to check for before/after in the substring between the current parsed item and the previous parsed item.
+    				if (beforeRegex.test(parsed[i]) || 
+    						(i > 0 && beforeRegex.test(line.substring(parsed[i-1].index, line.substring(parsed[i].index))))) {
+    					parsed[i].end = parsed[i].start.clone();
+    					console.log();
+    					parsed[i].end.assign('hour', parsed[i].start.get('hour'));
+    					parsed[i].end.assign('minute', parsed[i].start.get('minute'));
+    					parsed[i].start.assign('hour', MIN_HOUR);
+    					parsed[i].start.assign('minute', 0);
+    				}
+    				else if (afterRegex.test(line) || 
+    						(i > 0 && afterRegex.test(line.substring(parsed[i-1].index, line.substring(parsed[i].index))))) {
+    					parsed[i].end = parsed[i].start.clone();
+    					parsed[i].end.assign('hour', MAX_HOUR);
+    					parsed[i].end.assign('minute', 0);
+    				}
 
     				if ('start' in parsed[i] && 'end' in parsed[i] && parsed[i].end != null) {
     					availableTimes[parsed[i].start.date().getDay()].push([parsed[i].start.date(), parsed[i].end.date()]);
@@ -10829,7 +10852,7 @@ var app = (function () {
     		// If they are free except for the times listed, invert the time blocks for that day
     		// e.g. Monday except 2-3pm
 
-    		if (busyIndicator.test(line)) {
+    		if (busyRegex.test(line)) {
     			let weekday = parsed[0].start.date().getDay();
 
     			let date = parsed[0].start.date();
