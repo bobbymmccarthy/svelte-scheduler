@@ -1,4 +1,5 @@
 <script>
+    // used https://github.com/karkranikhil/voice-notes to learn how to use web speech api in svelte
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
   
@@ -25,9 +26,9 @@
 </script>
 
 <div>
-    <button on:click={() => iconHandler('PLAY')}>{isActive ? 'Pause' : 'Record'}</button>
-    <button on:click={() => iconHandler('RESET')}>RESET</button> 
-    <button on:click={() => iconHandler('SAVE')}>SAVE</button>
+    <button border="2px solid black" background-color="orange" on:click={() => iconHandler('PLAY')}>{isActive ? 'Pause' : 'Record'}</button>
+    <button on:click={() => iconHandler('RESET')}>RESET</button>
+    <!-- <button on:click={() => iconHandler('SAVE')}>SAVE</button>  -->
     {#if isActive}
       <p>Recording...</p>
     {/if}
