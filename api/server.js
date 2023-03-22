@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const UserTime = require('./models/userTime');
-const { findByIdAndDelete } = require('./models/todo');
 
 const app = express();
 

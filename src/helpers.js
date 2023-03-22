@@ -160,6 +160,7 @@ customChrono.refiners.push({
     }
 });
 
+// TODO: add support for time zone! (by leaving it in datetime object)
 // Concepts incorporated: Text Time Description
 // Takes text and processes it into a dictionary of available times for each day of the week: {0: [[sun-datetimestart1, sun-datetimeend1], [sun-datetimestart2, sun-datetimeend2]], 1: [], ... 6: []}
 function processText(text) {

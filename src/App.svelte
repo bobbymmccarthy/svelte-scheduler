@@ -9,10 +9,10 @@
 	let text = '';
 	let availableTimes = null;
 	let API_BASE = 'http://localhost:3001';
-
-	// localStorage.clear()
+	import accessibleDate from 'accessible-date';
 
 	let topIntervals = getTopNIntervals(getAllUserTimes(true), 5);
+	console.log(topIntervals);
 	getTimes();
 	
 
@@ -26,12 +26,45 @@
 		topIntervals.forEach((interval) => {
 			let day = interval['start'][0];
 			let startMin = interval['start'][2];
-			let startTime = interval['start'][1] + ':' + (startMin == 0 ? '00' : startMin.toString());
+			let startMeridiem = 'am'
+			if (interval['start'][1] > 12) {
+				interval['start'][1] -= 12;
+				startMeridiem = 'pm'
+			}
+			let startTime = interval['start'][1] + ':' + (startMin == 0 ? '00' : startMin.toString()) + startMeridiem;
 			let endMin = interval['end'][2];
-			let endTime = interval['end'][1] + ':' + (endMin == 0 ? '00' : endMin.toString());
+			let endMeridiem = 'am'
+			if (interval['end'][1] > 12) {
+				interval['end'][1] -= 12;
+				endMeridiem = 'pm'
+			}
+			let endTime = interval['end'][1] + ':' + (endMin == 0 ? '00' : endMin.toString()) + endMeridiem;
+
+
+			// Currently incorrect, but user does not see. The current day's month/day for setting up a datetime are eventually discarded in the display and only the hours/minutes are accurate
+			let currentDate = new Date();
+
+			// Also incorrect in that doesn't support timezones (beyond Boston/NY GMT-5)
+			// subtract 5 because dateTime is in local time zone GMT-5 where i'm coding, but eventually toISOString changes it to UTC time zone
+			let startDateTime = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDay(), interval['start'][1] - 5, interval['start'][2]);
+			let endDateTime = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDay(), interval['end'][1] - 5, interval['end'][2]);
+
+			startDateTime = startDateTime.toISOString();
+			endDateTime = endDateTime.toISOString();
 			let numUsers = interval['users'].size;
-			let users = Array.from(interval['users']).join(', ')
-			topTimesText.push({day: day, startTime: startTime, endTime: endTime, numUsers: numUsers, users: users})
+			let users = Array.from(interval['users']).join(', ');
+			let accessibleStartDate = accessibleDate(startDateTime, {
+			    format: `H MM m to `,
+			    language: `en`,
+			    military: false
+			});
+			let accessibleEndDate = accessibleDate(endDateTime, {
+			    format: `H MM m`,
+			    language: `en`,
+			    military: false
+			});
+			let accessibleTime = dayArr[day] + " " + accessibleStartDate + " " + accessibleEndDate;
+			topTimesText.push({day: day, startTime: startTime, endTime: endTime, numUsers: numUsers, users: users, accessibleTime: accessibleTime})
 		});
 		return topTimesText;
 	};
@@ -54,7 +87,7 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({name: username, times: strUserTimes})
 		}
-		const data = await(await fetch(API_BASE+ '/userTimes', requestOptions)).json()
+		const data = await(await fetch(API_BASE + '/userTimes', requestOptions)).json()
 		console.log(data)
 		return data
 	}
@@ -99,49 +132,41 @@
 </script>
 
 <main>
-	<h1>Speech 'n' Text Scheduler 🎤💻</h1>
-	<article class="cf">
-		<div class="input-side">
-			<h2>Name?</h2>
-			<input bind:value={name}>
-			<h2>When are you available to meet?</h2>
-			<h4><b>Voice Record</b> or <b>Type</b> your availablilty.</h4>
-			<p>Start with the <u>day of the week</u> followed by the <i>times</i>.<br>
-			<br>For example, I'm free... "<u>Monday</u> <i>9am-10am</i> and <i>11am-12pm</i>, <u>Tuesday</u> <i>except 3-4pm</i>, ..."</p>
-
-			<p>BE SURE TO INDICATE AM OR PM!</p>
+	<h1>When2Speech</h1>
+	<h2>A speech and text based way to find times to meet with others.</h2>
+	<div class="cf">
+		<div class="input-side" role="region">
+			<h2>Share Your Availability</h2>
+			<label for="name"><h3>Name?</h3></label>
+			<input id="name" bind:value={name}>
+			<h3>When are you available to meet?</h3>
+			<p><b>Voice Record</b> or <b>Type</b> your availability. Start with the <u>day of the week</u> followed by the <i>times</i>. For example, you can say, I'm free... "<u>Monday</u> <i>9am-10am</i> and <i>11am-12pm</i>, <u>Tuesday</u> <i>except 3-4pm</i>, Wednesday after 3pm" and so on... Be sure to indicate AM or PM.</p>
 			<VoiceRecognition bind:noteContent = {text}></VoiceRecognition>
-			<textarea bind:value={text} on:input={handleInput} placeholder="mon 9-10am, 2-3:45pm
-wed all day,
-thurs except 1-2pm,
-fri except 3-4pm and 5-6pm
-..."></textarea>
+			<textarea aria-label="an input field for your availability" bind:value={text} on:input={handleInput} placeholder=""></textarea>
 			<br><br>
 			<input class="submit" type="button" value="Submit" on:click={submit}>
 			<br>
 
-			<Table timeArr = {makeTimeArr(processText(text))}></Table>
+			<!-- <Table timeArr = {makeTimeArr(processText(text))}></Table> -->
 		</div>
 		
-		<div class="top-times-side">
-			<h2>Top Times</h2>
+		<div class="top-times-side" role="region">
+			<h2>Top Times for Everyone</h2>
 			{#await topTimesText}
 				<p>Processing Times...</p>
 			{:then topTimes}
 			{#each topTimes as time}
 				<div class = 'top-time'>
-					<p>
-						<b>{dayArr[time.day]} {time.startTime} - {time.endTime}</b>
-						<br>
-						<u>{time.numUsers} people</u><br>
-						({time.users})
-					</p>
+					<p><b><time datetime="" aria-label={time.accessibleTime}>{dayArr[time.day]} {time.startTime} - {time.endTime}</time></b>
+					<br>
+					<u>{time.numUsers} people</u><br></p>
+					({time.users})
 				</div>
 				<br>
 			{/each}
 			{/await}
 	</div>
-	</article>
+	</div>
 
 	</main>
 
@@ -150,7 +175,6 @@ fri except 3-4pm and 5-6pm
 	main {
 		text-align: center;
 		padding: 1em;
-		max-width: 240px;
 		margin: 0 auto;
 	}
 
@@ -168,7 +192,7 @@ fri except 3-4pm and 5-6pm
 
 	textarea {
 		height: 150px;
-		width: 350px;
+		max-width: 350px;
 		padding-bottom: 150px;
 	}
 

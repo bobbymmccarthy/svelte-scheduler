@@ -1,5 +1,9 @@
 import {processText, createSharedCalendar, getTopNTimes} from './helpers.js';
 
+// this file does not lead to automatic testing / is not part of the build process
+// but here are some sample texts to use for testing
+// could make it part of the build process or figure out how to use https://jestjs.io/
+
 // Test texts
 let text1 = "monday 9-10am, 11-1pm, 5:30-6:30pm, 7:30-8:30pm, tuesday all day, wednesday except 2-3pm and 4-5pm, thursday 9-7pm";
 let text2 = "monday 10:30am-5pm, tuesday 9am-1pm, wednesday 2:30pm-3:30pm, thursday all day";
