@@ -1,5 +1,5 @@
 
-(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35730/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
+(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35731/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 var app = (function () {
     'use strict';
 
@@ -10629,8 +10629,8 @@ var app = (function () {
     const afterRegex = /after/;
     const customChrono = distExports.casual.clone();
 
-    let MIN_HOUR = 5;
-    let MAX_HOUR = 23;
+    let MIN_HOUR = 0;
+    let MAX_HOUR = 24;
 
     function createEmptyCalendar() {
     	let calendar = {};
@@ -10647,6 +10647,7 @@ var app = (function () {
     	console.log({userTimes});
     	let userTimesPayload = await userTimes;
     	let sharedCalendar = createEmptyCalendar();
+    	console.log(sharedCalendar);
     	console.log({userTimesPayload});
     	userTimesPayload.forEach(obj => {
     		if (obj) {
@@ -10664,6 +10665,8 @@ var app = (function () {
     			  		let endMin = (h != endHour) ? 60 : (new Date(block[1])).getMinutes();
 
     			  		for (let m = startMin; m < endMin; m+=15) {
+    			  			console.log('h' + h.toString());
+    			  			console.log('m' + m.toString());
     			  			sharedCalendar[day][h+'-'+m].push(user);
     			  		}			  	}
     			  });
@@ -10755,6 +10758,7 @@ var app = (function () {
         }
     });
 
+    // TODO: add support for time zone! (by leaving it in datetime object)
     // Concepts incorporated: Text Time Description
     // Takes text and processes it into a dictionary of available times for each day of the week: {0: [[sun-datetimestart1, sun-datetimeend1], [sun-datetimestart2, sun-datetimeend2]], 1: [], ... 6: []}
     function processText(text) {
@@ -11426,6 +11430,160 @@ var app = (function () {
     	}
     }
 
+    var accessibleDate = function accessibleDate(date, options) {
+
+        // Sanity check the function params
+        if (!date) {
+            console.error('accessible-date: You must supply a date in ISO format.');
+            return '';
+        }
+
+        var settings = {
+            supportedLanguages: ['en', 'es', 'fr'],
+            language: '',
+            military: false,
+            format: '',
+            ignore: ['heure', 'heures', 'minute', 'minutes', 'second', 'seconds', 'Day', 'Date', 'Hour', 'Month', 'Meridian', 'Second', 'Year']
+        };
+
+        if (!options.format || typeof options.format !== 'string') {
+            console.error('accessible-date: You must supply a format.');
+            return '';
+        }
+        settings.format = options.format;
+
+        if (options.language) {
+            var language = settings.supportedLanguages.find(function (lang) {
+                return options.language === lang;
+            });
+            settings.language = language || 'en';
+        }
+
+        if (options.military && typeof options.military === 'boolean' && !settings.language.match(/es|fr/)) {
+            settings.military = options.military;
+        }
+
+        if (options.ignore && Array.isArray(options.ignore)) {
+            options.ignore.forEach(function (ignoreString) {
+                settings.ignore.push(ignoreString);
+            });
+        }
+
+        // Add settings object that holds the parts of the date formatted
+        var dateParts = {
+            // Day (DD)
+            day: {
+                en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                es: ['domingo', 'lunes', 'martes', 'mi\xE9rcoles', 'jueves', 'viernes', 's\xE1bado'],
+                fr: ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+            },
+            // Minute (MM)
+            minute: {
+                en: {
+                    standard: ['oh clock', 'oh one', 'oh two', 'oh three', 'oh four', 'oh five', 'oh six', 'oh seven', 'oh eight', 'oh nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three', 'twenty-four', 'twenty-five', 'twenty-six', 'twenty-seven', 'twenty-eight', 'twenty-nine', 'thirty', 'thirty-one', 'thirty-two', 'thirty-three', 'thirty-four', 'thirty-five', 'thirty-six', 'thirty-seven', 'thirty-eight', 'thirty-nine', 'fourty', 'fourty-one', 'fourty-two', 'fourty-three', 'fourty-four', 'fourty-five', 'fourty-six', 'fourty-seven', 'fourty-eight', 'fourty-nine', 'fifty', 'fifty-one', 'fifty-two', 'fifty-three', 'fifty-four', 'fifty-five', 'fifty-six', 'fifty-seven', 'fifty-eight', 'fifty-nine'],
+                    military: ['zero zero', 'zero one', 'zero two', 'zero three', 'zero four', 'zero five', 'zero six', 'zero seven', 'zero eight', 'zero nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three', 'twenty-four', 'twenty-five', 'twenty-six', 'twenty-seven', 'twenty-eight', 'twenty-nine', 'thirty', 'thirty-one', 'thirty-two', 'thirty-three', 'thirty-four', 'thirty-five', 'thirty-six', 'thirty-seven', 'thirty-eight', 'thirty-nine', 'fourty', 'fourty-one', 'fourty-two', 'fourty-three', 'fourty-four', 'fourty-five', 'fourty-six', 'fourty-seven', 'fourty-eight', 'fourty-nine', 'fifty', 'fifty-one', 'fifty-two', 'fifty-three', 'fifty-four', 'fifty-five', 'fifty-six', 'fifty-seven', 'fifty-eight', 'fifty-nine']
+                },
+                es: {
+                    standard: ['', 'y uno', 'y dos', 'y tres', 'y cuatro', 'y cinco', 'y seis', 'y siete', 'y ocho', 'y nueve', 'y diez', 'y once', 'y doce', 'y trece', 'y catorce', 'y cuarto', 'y dieceseis', 'y diecesiete', 'y dieceocho', 'y diecenueve', 'y veinte', 'y veintiuno', 'y veintid\xF3s', 'y veintitr\xE9s', 'y veinticuatro', 'y veinticinco', 'y veintis\xE9is', 'y veintisiete', 'y veintiocho', 'y veintinueve', 'y media', 'y treinta y uno', 'y treinta y dos', 'y treinta y tres', 'y treinta y cuatro', 'y treinta y cinco', 'y treinta y seis', 'y treinta y siete', 'y trienta y ocho', 'y treinta y nueve', 'y cuarenta', 'y cuarenta y uno', 'y curatenta y dos', 'y cuarenta y trece', 'y cuarenta y cuatro', 'y cuarenta y cinco', 'y cuarenta y seis', 'y cuarenta y siete', 'y cuarenta y ocho', 'y cuarenta y nueve', 'y cincuenta', 'y cincuenta y uno', 'y cincuenta y dos', 'y cincuenta y trece', 'y cincuenta y cuatro', 'y cincuenta y cinco', 'y cincuenta y seis', 'y cincuenta y siete', 'y cincuenta y ocho', 'y cincuenta y nueve']
+                },
+                fr: {
+                    standard: ['', 'une', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf', 'vingt', 'vingt et un', 'vingt-deux', 'vingt-trois', 'vingt-quatre', 'vingt-cinq', 'vingt-six', 'vingt-sept', 'vingt-huit', 'vingt-neuf', 'trente', 'Trente et un', 'Trente-deux', 'Trente-trois', 'Trente-quatre', 'Trente-cinq', 'Trente-six', 'Trente-sept', 'Trente-huit', 'Trente-neuf', 'quarante', 'quarante et un', 'quarante-deux', 'quarante-trois', 'quarante-quatre', 'quarante-cinq', 'quarante-six', 'quarante-sept', 'quarante-huit', 'quarante-neuf', 'cinquante', 'cinquante et un', 'cinquante-deux', 'cinquante-trois', 'cinquante-quatre', 'cinquante-cinq', 'cinquante-six', 'cinquante-sept', 'cinquante-huit', 'cinquante-neuf']
+                }
+            },
+            // Date (D)
+            date: {
+                en: ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eigth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth', 'twenty-first', 'twenty-second', 'twenty-third', 'twenty-fourth', 'twenty-fifth', 'twenty-sixth', 'twenty-seventh', 'twenty-eighth', 'twenty-ninth', 'thirtieth', 'thirty-first'],
+                es: ['uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieceseis', 'diecesiete', 'dieceocho', 'diecenueve', 'veinte', 'veintiuno', 'veintid\xF3s', 'veintitr\xE9s', 'veinticuatro', 'veinticinco', 'veintis\xE9is', 'veintisiete', 'veintiocho', 'veintinueve', 'treinta', 'treinta y uno'],
+                fr: ['une', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf', 'vingt', 'vingt et un', 'vingt-deux', 'vingt-trois', 'vingt-quatre', 'vingt-cinq', 'vingt-six', 'vingt-sept', 'vingt-huit', 'vingt-neuf', 'trente', 'Trente et un']
+            },
+            // Hour (H)
+            hour: {
+                en: {
+                    standard: ['twelve', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven'],
+                    military: ['zero zero', 'zero one', 'zero two', 'zero three', 'zero four', 'zero five', 'zero six', 'zero seven', 'zero eight', 'zero nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three']
+                },
+                es: {
+                    standard: ['doce', 'uno', 'dos', 'trece', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'uno', 'dos', 'trece', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once']
+                },
+                fr: {
+                    standard: ['z\xE9ro', 'une', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf', 'vingt', 'vingt et un', 'vingt-deux', 'vingt-trois']
+                }
+            },
+            // Month (M)
+            month: {
+                en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                es: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agusto', 'spetiembre', 'octubre', 'noviembre', 'diciembre'],
+                fr: ['janvier', 'f\xE9vrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'ao\xFBt', 'septembre', 'octobre', 'novembre', 'd\xE9cembre']
+            },
+            // Second (S)
+            second: {
+                en: ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three', 'twenty-four', 'twenty-five', 'twenty-six', 'twenty-seven', 'twenty-eight', 'twenty-nine', 'thirty', 'thirty-one', 'thirty-two', 'thirty-three', 'thirty-four', 'thirty-five', 'thirty-six', 'thirty-seven', 'thirty-eight', 'thirty-nine', 'fourty', 'fourty-one', 'fourty-two', 'fourty-three', 'fourty-four', 'fourty-five', 'fourty-six', 'fourty-seven', 'fourty-eight', 'fourty-nine', 'fifty', 'fifty-one', 'fifty-two', 'fifty-three', 'fifty-four', 'fifty-five', 'fifty-six', 'fifty-seven', 'fifty-eight', 'fifty-nine'],
+                es: ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieceseis', 'diecesiete', 'dieceocho', 'diecenueve', 'veinte', 'veintiuno', 'veintid\xF3s', 'veintitr\xE9s', 'veinticuatro', 'veinticinco', 'veintis\xE9is', 'veintisiete', 'veintiocho', 'veintinueve', 'treinta', 'treinta y uno', 'treinta y dos', 'treinta y tres', 'treinta y cuatro', 'treinta y cinco', 'treinta y seis', 'treinta y siete', 'trienta y ocho', 'treinta y nueve', 'cuarenta', 'cuarenta y uno', 'curatenta y dos', 'cuarenta y trece', 'cuarenta y cuatro', 'cuarenta y cinco', 'cuarenta y seis', 'cuarenta y siete', 'cuarenta y ocho', 'cuarenta y nueve', 'cincuenta', 'cincuenta y uno', 'cincuenta y dos', 'cincuenta y trece', 'cincuenta y cuatro', 'cincuenta y cinco', 'cincuenta y seis', 'cincuenta y siete', 'cincuenta y ocho', 'cincuenta y nueve'],
+                fr: ['', 'une', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf', 'vingt', 'vingt et un', 'vingt-deux', 'vingt-trois', 'vingt-quatre', 'vingt-cinq', 'vingt-six', 'vingt-sept', 'vingt-huit', 'vingt-neuf', 'trente', 'Trente et un', 'Trente-deux', 'Trente-trois', 'Trente-quatre', 'Trente-cinq', 'Trente-six', 'Trente-sept', 'Trente-huit', 'Trente-neuf', 'quarante', 'quarante et un', 'quarante-deux', 'quarante-trois', 'quarante-quatre', 'quarante-cinq', 'quarante-six', 'quarante-sept', 'quarante-huit', 'quarante-neuf', 'cinquante', 'cinquante et un', 'cinquante-deux', 'cinquante-trois', 'cinquante-quatre', 'cinquante-cinq', 'cinquante-six', 'cinquante-sept', 'cinquante-huit', 'cinquante-neuf']
+            },
+            // Year (Y)
+            year: {
+                en: {
+                    century: ['', 'one hundred', 'two hundred', 'three hundred', 'four hundred', 'five hundred', 'six hundred', 'seven hundred', 'eight hundred', 'nine hundred', 'one thousand', 'eleven hundred', 'twelve hundred', 'thirteen hundred', 'fourteen hundred', 'fifteen hundred', 'sixteen hundred', 'seventeen hundred', 'eighteen hundred', 'nineteen hundred', 'two thousand', 'twenty one'],
+                    decade: ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three', 'twenty-four', 'twenty-five', 'twenty-six', 'twenty-seven', 'twenty-eight', 'twenty-nine', 'thirty', 'thirty-one', 'thirty-two', 'thirty-three', 'thirty-four', 'thirty-five', 'thirty-six', 'thirty-seven', 'thirty-eight', 'thirty-nine', 'fourty', 'fourty-one', 'fourty-two', 'fourty-three', 'fourty-four', 'fourty-five', 'fourty-six', 'fourty-seven', 'fourty-eight', 'fourty-nine', 'fifty', 'fifty-one', 'fifty-two', 'fifty-three', 'fifty-four', 'fifty-five', 'fifty-six', 'fifty-seven', 'fifty-eight', 'fifty-nine', 'sixty', 'sixty-one', 'sixty-two', 'sixty-three', 'sixty-four', 'sixty-five', 'sixty-six', 'sixty-seven', 'sixty-eight', 'sixty-nine', 'seventy', 'seventy-one', 'seventy-two', 'seventy-three', 'seventy-four', 'seventy-five', 'seventy-six', 'seventy-seven', 'seventy-eight', 'seventy-nine', 'eighty', 'eighty-one', 'eighty-two', 'eighty-three', 'eighty-four', 'eighty-five', 'eighty-six', 'eighty-seven', 'eighty-eight', 'eighty-nine', 'ninety', 'ninety-one', 'ninety-two', 'ninety-three', 'ninety-four', 'ninety-five', 'ninety-six', 'ninety-seven', 'ninety-eight', 'ninety-nine']
+                },
+                es: {
+                    century: ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos', 'mil', 'mil cien', 'mil doscientos', 'mil trescientos', 'mil cuatrocientos', 'mil quinientos', 'mil seiscientos', 'mil setecientos', 'mil ochocientos', 'mil novecientos', 'dos mil', 'dos mil cien'],
+                    decade: ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieceseis', 'diecesiete', 'dieceocho', 'diecenueve', 'veinte', 'veintiuno', 'veintid\xF3s', 'veintitr\xE9s', 'veinticuatro', 'veinticinco', 'veintis\xE9is', 'veintisiete', 'veintiocho', 'veintinueve', 'treinta', 'treinta y uno', 'treinta y dos', 'treinta y tres', 'treinta y cuatro', 'treinta y cinco', 'treinta y seis', 'treinta y siete', 'trienta y ocho', 'treinta y nueve', 'cuarenta', 'cuarenta y uno', 'curatenta y dos', 'cuarenta y trece', 'cuarenta y cuatro', 'cuarenta y cinco', 'cuarenta y seis', 'cuarenta y siete', 'cuarenta y ocho', 'cuarenta y nueve', 'cincuenta', 'cincuenta y uno', 'cincuenta y dos', 'cincuenta y trece', 'cincuenta y cuatro', 'cincuenta y cinco', 'cincuenta y seis', 'cincuenta y siete', 'cincuenta y ocho', 'cincuenta y nueve', 'sesenta', 'sesenta y uno', 'sesenta y dos', 'sesenta y trece', 'sesenta y cuatro', 'sesenta y cinco', 'sesenta y seis', 'sesenta y siete', 'sesenta y ocho', 'sesenta y nueve', 'setenta', 'setenta y uno', 'setenta y dos', 'setenta y trece', 'setenta y cuatro', 'setenta y cinco', 'setenta y seis', 'setenta y siete', 'setenta y ocho', 'setenta y nueve', 'ochenta', 'ochenta y uno', 'ochenta y dos', 'ochenta y trece', 'ochenta y cuatro', 'ochenta y cinco', 'ochenta y seis', 'ochenta y siete', 'ochenta y ocho', 'ochenta y nueve', 'noventa', 'noventa y uno', 'noventa y dos', 'noventa y trece', 'noventa y cuatro', 'noventa y cinco', 'noventa y seis', 'noventa y siete', 'noventa y ocho', 'noventa y nueve']
+                },
+                fr: {
+                    century: ['', 'cent', 'deux cents', 'trois cents', 'quatre cents', 'cinq cents', 'six cents', 'sept cents', 'huit cents', 'neuf cents', 'mille', 'mille cent', 'mille deux cents', 'mille trois cents', 'mille quatre cents', 'mille cinq cents', 'mille six cents', 'mille sept cents', 'mille huit cents', 'mille neuf cents', 'deux mille', 'deux mille cent'],
+                    decade: ['', 'une', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf', 'vingt', 'vingt et un', 'vingt-deux', 'vingt-trois', 'vingt-quatre', 'vingt-cinq', 'vingt-six', 'vingt-sept', 'vingt-huit', 'vingt-neuf', 'trente', 'Trente et un', 'Trente-deux', 'Trente-trois', 'Trente-quatre', 'Trente-cinq', 'Trente-six', 'Trente-sept', 'Trente-huit', 'Trente-neuf', 'quarante', 'quarante et un', 'quarante-deux', 'quarante-trois', 'quarante-quatre', 'quarante-cinq', 'quarante-six', 'quarante-sept', 'quarante-huit', 'quarante-neuf', 'cinquante', 'cinquante et un', 'cinquante-deux', 'cinquante-trois', 'cinquante-quatre', 'cinquante-cinq', 'cinquante-six', 'cinquante-sept', 'cinquante-huit', 'cinquante-neuf', 'soixante', 'soixante et un', 'soixante-deux', 'soixante-trois', 'soixante-quatre', 'soixante-cinq', 'soixante-six', 'soixante-sept', 'soixante-huit', 'soixante-neuf', 'soixante-dix', 'soixante-et-onze', 'soixante-douze', 'soixante-treize', 'soixante-quatorze', 'soixante-quinze', 'soixante-seize', 'soixante-dix-sept', 'soixante-dix-huit', 'soixante-dix-neuf', 'quatre-vingts', 'quatre-vingt-un', 'quatre-vingt-deux', 'quatre-vingt-trois', 'quatre-vingt-quatre', 'quatre-vingt-cinq', 'quatre-vingt-six', 'quatre-vingt-sept', 'quatre-vingt-huit', 'quatre-vingt-neuf', 'quatre-vingt-dix', 'quatre-vingt-onze', 'quatre-vingt-douze', 'quatre-vingt-treize', 'quatre-vingt-quatorze', 'quatre-vingt-quinze', 'quatre-vingt-seize', 'quatre-vingt-dix-sept', 'quatre-vingt-dix-huit', 'quatre-vingt-dix-neuf']
+                }
+            },
+            // Meridian (m)
+            meridian: {
+                en: ['a m', 'p m'],
+                es: ['de la ma\xF1ana', 'de la tarde'],
+                fr: ['du matin', 'du soir']
+            }
+        };
+
+        // Convert the date using new Date();
+        var dateToFormat = new Date(date);
+        var datePartsParsed = {
+            DD: dateParts.day[settings.language][dateToFormat.getUTCDay()],
+            MM: settings.military ? dateParts.minute[settings.language].military[dateToFormat.getUTCMinutes()] : dateParts.minute[settings.language].standard[dateToFormat.getUTCMinutes()],
+            D: dateParts.date[settings.language][dateToFormat.getUTCDate() - 1],
+            H: settings.military ? dateParts.hour[settings.language].military[dateToFormat.getUTCHours()] : dateParts.hour[settings.language].standard[dateToFormat.getUTCHours()],
+            M: dateParts.month[settings.language][dateToFormat.getUTCMonth()],
+            S: dateParts.date[settings.language][dateToFormat.getUTCSeconds()],
+            Y: function () {
+                var year = '' + dateToFormat.getUTCFullYear();
+                var century = dateParts.year[settings.language].century[parseInt(year.substr(0, 2))];
+                var decade = dateParts.year[settings.language].decade[parseInt(year.substr(2, 3))];
+                return century + ' ' + decade;
+            }(),
+            m: settings.military ? '' : dateToFormat.getUTCHours() >= 12 ? dateParts.meridian[settings.language][1] : dateParts.meridian[settings.language][0]
+        };
+
+        // Format the date based off of the format requested
+        // The final replace is there because if a dateParsedPart doesn’t exist, then it
+        // will place it in as an additional space. This removes that space.
+        var datePartsParsedArray = Object.keys(datePartsParsed);
+        var formatArray = settings.format.split(' ');
+        return formatArray.map(function (datePart) {
+            var datePartFormatted = datePart;
+            for (var j = 0; j < settings.ignore.length; j++) {
+                if (datePart.indexOf(settings.ignore[j]) !== -1) {
+                    return datePartFormatted;
+                }
+            }
+            for (var i = 0; i < datePartsParsedArray.length; i++) {
+                if (datePart.indexOf(datePartsParsedArray[i]) !== -1) {
+                    datePartFormatted = datePart.replace(datePartsParsedArray[i], datePartsParsed[datePartsParsedArray[i]]);
+                    break;
+                }
+            }
+            return datePartFormatted;
+        }).join(' ').replace('  ', ' ').trim();
+    };
+
     /* src/App.svelte generated by Svelte v3.55.1 */
 
     const { console: console_1 } = globals;
@@ -11433,7 +11591,7 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[19] = list[i];
+    	child_ctx[20] = list[i];
     	return child_ctx;
     }
 
@@ -11452,10 +11610,10 @@ var app = (function () {
     	return block;
     }
 
-    // (130:3) {:then topTimes}
+    // (157:3) {:then topTimes}
     function create_then_block(ctx) {
     	let each_1_anchor;
-    	let each_value = /*topTimes*/ ctx[18];
+    	let each_value = /*topTimes*/ ctx[19];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -11480,7 +11638,7 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*topTimesText, dayArr*/ 12) {
-    				each_value = /*topTimes*/ ctx[18];
+    				each_value = /*topTimes*/ ctx[19];
     				validate_each_argument(each_value);
     				let i;
 
@@ -11513,36 +11671,38 @@ var app = (function () {
     		block,
     		id: create_then_block.name,
     		type: "then",
-    		source: "(130:3) {:then topTimes}",
+    		source: "(157:3) {:then topTimes}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (131:3) {#each topTimes as time}
+    // (158:3) {#each topTimes as time}
     function create_each_block(ctx) {
     	let div;
     	let p;
     	let b;
-    	let t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[19].day] + "";
+    	let time;
+    	let t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[20].day] + "";
     	let t0;
     	let t1;
-    	let t2_value = /*time*/ ctx[19].startTime + "";
+    	let t2_value = /*time*/ ctx[20].startTime + "";
     	let t2;
     	let t3;
-    	let t4_value = /*time*/ ctx[19].endTime + "";
+    	let t4_value = /*time*/ ctx[20].endTime + "";
     	let t4;
+    	let time_aria_label_value;
     	let t5;
     	let br0;
     	let t6;
     	let u;
-    	let t7_value = /*time*/ ctx[19].numUsers + "";
+    	let t7_value = /*time*/ ctx[20].numUsers + "";
     	let t7;
     	let t8;
     	let br1;
     	let t9;
-    	let t10_value = /*time*/ ctx[19].users + "";
+    	let t10_value = /*time*/ ctx[20].users + "";
     	let t10;
     	let t11;
     	let t12;
@@ -11553,6 +11713,7 @@ var app = (function () {
     			div = element("div");
     			p = element("p");
     			b = element("b");
+    			time = element("time");
     			t0 = text(t0_value);
     			t1 = space();
     			t2 = text(t2_value);
@@ -11565,29 +11726,33 @@ var app = (function () {
     			t7 = text(t7_value);
     			t8 = text(" people");
     			br1 = element("br");
-    			t9 = text("\n\t\t\t\t\t\t(");
+    			t9 = text("\n\t\t\t\t\t(");
     			t10 = text(t10_value);
     			t11 = text(")");
     			t12 = space();
     			br2 = element("br");
-    			add_location(b, file, 133, 6, 4097);
-    			add_location(br0, file, 134, 6, 4163);
-    			add_location(u, file, 135, 6, 4174);
-    			add_location(br1, file, 135, 35, 4203);
-    			add_location(p, file, 132, 5, 4087);
-    			attr_dev(div, "class", "top-time svelte-1q0ni7j");
-    			add_location(div, file, 131, 4, 4057);
-    			add_location(br2, file, 139, 4, 4254);
+    			attr_dev(time, "datetime", "");
+    			attr_dev(time, "aria-label", time_aria_label_value = /*time*/ ctx[20].accessibleTime);
+    			add_location(time, file, 159, 11, 5795);
+    			add_location(b, file, 159, 8, 5792);
+    			add_location(br0, file, 160, 5, 5915);
+    			add_location(u, file, 161, 5, 5925);
+    			add_location(br1, file, 161, 34, 5954);
+    			add_location(p, file, 159, 5, 5789);
+    			attr_dev(div, "class", "top-time svelte-n0rlhk");
+    			add_location(div, file, 158, 4, 5759);
+    			add_location(br2, file, 164, 4, 5998);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, p);
     			append_dev(p, b);
-    			append_dev(b, t0);
-    			append_dev(b, t1);
-    			append_dev(b, t2);
-    			append_dev(b, t3);
-    			append_dev(b, t4);
+    			append_dev(b, time);
+    			append_dev(time, t0);
+    			append_dev(time, t1);
+    			append_dev(time, t2);
+    			append_dev(time, t3);
+    			append_dev(time, t4);
     			append_dev(p, t5);
     			append_dev(p, br0);
     			append_dev(p, t6);
@@ -11595,18 +11760,23 @@ var app = (function () {
     			append_dev(u, t7);
     			append_dev(u, t8);
     			append_dev(p, br1);
-    			append_dev(p, t9);
-    			append_dev(p, t10);
-    			append_dev(p, t11);
+    			append_dev(div, t9);
+    			append_dev(div, t10);
+    			append_dev(div, t11);
     			insert_dev(target, t12, anchor);
     			insert_dev(target, br2, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*topTimesText*/ 4 && t0_value !== (t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[19].day] + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*topTimesText*/ 4 && t2_value !== (t2_value = /*time*/ ctx[19].startTime + "")) set_data_dev(t2, t2_value);
-    			if (dirty & /*topTimesText*/ 4 && t4_value !== (t4_value = /*time*/ ctx[19].endTime + "")) set_data_dev(t4, t4_value);
-    			if (dirty & /*topTimesText*/ 4 && t7_value !== (t7_value = /*time*/ ctx[19].numUsers + "")) set_data_dev(t7, t7_value);
-    			if (dirty & /*topTimesText*/ 4 && t10_value !== (t10_value = /*time*/ ctx[19].users + "")) set_data_dev(t10, t10_value);
+    			if (dirty & /*topTimesText*/ 4 && t0_value !== (t0_value = /*dayArr*/ ctx[3][/*time*/ ctx[20].day] + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*topTimesText*/ 4 && t2_value !== (t2_value = /*time*/ ctx[20].startTime + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*topTimesText*/ 4 && t4_value !== (t4_value = /*time*/ ctx[20].endTime + "")) set_data_dev(t4, t4_value);
+
+    			if (dirty & /*topTimesText*/ 4 && time_aria_label_value !== (time_aria_label_value = /*time*/ ctx[20].accessibleTime)) {
+    				attr_dev(time, "aria-label", time_aria_label_value);
+    			}
+
+    			if (dirty & /*topTimesText*/ 4 && t7_value !== (t7_value = /*time*/ ctx[20].numUsers + "")) set_data_dev(t7, t7_value);
+    			if (dirty & /*topTimesText*/ 4 && t10_value !== (t10_value = /*time*/ ctx[20].users + "")) set_data_dev(t10, t10_value);
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
@@ -11619,14 +11789,14 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(131:3) {#each topTimes as time}",
+    		source: "(158:3) {#each topTimes as time}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (128:24)      <p>Processing Times...</p>    {:then topTimes}
+    // (155:24)      <p>Processing Times...</p>    {:then topTimes}
     function create_pending_block(ctx) {
     	let p;
 
@@ -11634,7 +11804,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Processing Times...";
-    			add_location(p, file, 128, 4, 3978);
+    			add_location(p, file, 155, 4, 5680);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -11649,7 +11819,7 @@ var app = (function () {
     		block,
     		id: create_pending_block.name,
     		type: "pending",
-    		source: "(128:24)      <p>Processing Times...</p>    {:then topTimes}",
+    		source: "(155:24)      <p>Processing Times...</p>    {:then topTimes}",
     		ctx
     	});
 
@@ -11660,29 +11830,27 @@ var app = (function () {
     	let main;
     	let h1;
     	let t1;
-    	let article;
-    	let div0;
     	let h20;
     	let t3;
-    	let input0;
-    	let t4;
+    	let div2;
+    	let div0;
     	let h21;
-    	let t6;
-    	let h4;
-    	let b0;
+    	let t5;
+    	let label;
+    	let h30;
+    	let t7;
+    	let input0;
     	let t8;
-    	let b1;
+    	let h31;
     	let t10;
-    	let t11;
-    	let p0;
+    	let p;
+    	let b0;
     	let t12;
-    	let u0;
+    	let b1;
     	let t14;
-    	let i0;
+    	let u0;
     	let t16;
-    	let br0;
-    	let t17;
-    	let br1;
+    	let i0;
     	let t18;
     	let u1;
     	let t20;
@@ -11695,25 +11863,21 @@ var app = (function () {
     	let i3;
     	let t28;
     	let t29;
-    	let p1;
-    	let t31;
     	let voicerecognition;
     	let updating_noteContent;
-    	let t32;
+    	let t30;
     	let textarea;
+    	let t31;
+    	let br0;
+    	let br1;
+    	let t32;
+    	let input1;
     	let t33;
     	let br2;
-    	let br3;
     	let t34;
-    	let input1;
-    	let t35;
-    	let br4;
-    	let t36;
-    	let table;
-    	let t37;
     	let div1;
     	let h22;
-    	let t39;
+    	let t36;
     	let promise;
     	let current;
     	let mounted;
@@ -11736,13 +11900,6 @@ var app = (function () {
 
     	binding_callbacks.push(() => bind(voicerecognition, 'noteContent', voicerecognition_noteContent_binding));
 
-    	table = new Table({
-    			props: {
-    				timeArr: makeTimeArr(processText(/*text*/ ctx[0]))
-    			},
-    			$$inline: true
-    		});
-
     	let info = {
     		ctx,
     		current: null,
@@ -11751,7 +11908,7 @@ var app = (function () {
     		pending: create_pending_block,
     		then: create_then_block,
     		catch: create_catch_block,
-    		value: 18
+    		value: 19
     	};
 
     	handle_promise(promise = /*topTimesText*/ ctx[2], info);
@@ -11760,38 +11917,38 @@ var app = (function () {
     		c: function create() {
     			main = element("main");
     			h1 = element("h1");
-    			h1.textContent = "Speech 'n' Text Scheduler 🎤💻";
+    			h1.textContent = "When2Speech";
     			t1 = space();
-    			article = element("article");
-    			div0 = element("div");
     			h20 = element("h2");
-    			h20.textContent = "Name?";
+    			h20.textContent = "A speech and text based way to find times to meet with others.";
     			t3 = space();
-    			input0 = element("input");
-    			t4 = space();
+    			div2 = element("div");
+    			div0 = element("div");
     			h21 = element("h2");
-    			h21.textContent = "When are you available to meet?";
-    			t6 = space();
-    			h4 = element("h4");
+    			h21.textContent = "Share Your Availability";
+    			t5 = space();
+    			label = element("label");
+    			h30 = element("h3");
+    			h30.textContent = "Name?";
+    			t7 = space();
+    			input0 = element("input");
+    			t8 = space();
+    			h31 = element("h3");
+    			h31.textContent = "When are you available to meet?";
+    			t10 = space();
+    			p = element("p");
     			b0 = element("b");
     			b0.textContent = "Voice Record";
-    			t8 = text(" or ");
+    			t12 = text(" or ");
     			b1 = element("b");
     			b1.textContent = "Type";
-    			t10 = text(" your availablilty.");
-    			t11 = space();
-    			p0 = element("p");
-    			t12 = text("Start with the ");
+    			t14 = text(" your availability. Start with the ");
     			u0 = element("u");
     			u0.textContent = "day of the week";
-    			t14 = text(" followed by the ");
+    			t16 = text(" followed by the ");
     			i0 = element("i");
     			i0.textContent = "times";
-    			t16 = text(".");
-    			br0 = element("br");
-    			t17 = space();
-    			br1 = element("br");
-    			t18 = text("For example, I'm free... \"");
+    			t18 = text(". For example, you can say, I'm free... \"");
     			u1 = element("u");
     			u1.textContent = "Monday";
     			t20 = space();
@@ -11806,67 +11963,66 @@ var app = (function () {
     			t26 = space();
     			i3 = element("i");
     			i3.textContent = "except 3-4pm";
-    			t28 = text(", ...\"");
+    			t28 = text(", Wednesday after 3pm\" and so on... Be sure to indicate AM or PM.");
     			t29 = space();
-    			p1 = element("p");
-    			p1.textContent = "BE SURE TO INDICATE AM OR PM!";
-    			t31 = space();
     			create_component(voicerecognition.$$.fragment);
-    			t32 = space();
+    			t30 = space();
     			textarea = element("textarea");
+    			t31 = space();
+    			br0 = element("br");
+    			br1 = element("br");
+    			t32 = space();
+    			input1 = element("input");
     			t33 = space();
     			br2 = element("br");
-    			br3 = element("br");
     			t34 = space();
-    			input1 = element("input");
-    			t35 = space();
-    			br4 = element("br");
-    			t36 = space();
-    			create_component(table.$$.fragment);
-    			t37 = space();
     			div1 = element("div");
     			h22 = element("h2");
-    			h22.textContent = "Top Times";
-    			t39 = space();
+    			h22.textContent = "Top Times for Everyone";
+    			t36 = space();
     			info.block.c();
-    			attr_dev(h1, "class", "svelte-1q0ni7j");
-    			add_location(h1, file, 101, 1, 3001);
-    			add_location(h20, file, 104, 3, 3093);
-    			add_location(input0, file, 105, 3, 3111);
-    			add_location(h21, file, 106, 3, 3140);
-    			add_location(b0, file, 107, 7, 3188);
-    			add_location(b1, file, 107, 30, 3211);
-    			add_location(h4, file, 107, 3, 3184);
-    			add_location(u0, file, 108, 21, 3268);
-    			add_location(i0, file, 108, 60, 3307);
-    			add_location(br0, file, 108, 73, 3320);
-    			add_location(br1, file, 109, 3, 3328);
-    			add_location(u1, file, 109, 33, 3358);
-    			add_location(i1, file, 109, 47, 3372);
-    			add_location(i2, file, 109, 67, 3392);
-    			add_location(u2, file, 109, 85, 3410);
-    			add_location(i3, file, 109, 100, 3425);
-    			add_location(p0, file, 108, 3, 3250);
-    			add_location(p1, file, 111, 3, 3459);
-    			attr_dev(textarea, "placeholder", "mon 9-10am, 2-3:45pm\nwed all day,\nthurs except 1-2pm,\nfri except 3-4pm and 5-6pm\n...");
-    			attr_dev(textarea, "class", "svelte-1q0ni7j");
-    			add_location(textarea, file, 113, 3, 3566);
-    			add_location(br2, file, 118, 3, 3731);
-    			add_location(br3, file, 118, 7, 3735);
-    			attr_dev(input1, "class", "submit svelte-1q0ni7j");
+    			attr_dev(h1, "class", "svelte-n0rlhk");
+    			add_location(h1, file, 134, 1, 4557);
+    			add_location(h20, file, 135, 1, 4579);
+    			add_location(h21, file, 138, 3, 4713);
+    			add_location(h30, file, 139, 21, 4767);
+    			attr_dev(label, "for", "name");
+    			add_location(label, file, 139, 3, 4749);
+    			attr_dev(input0, "id", "name");
+    			add_location(input0, file, 140, 3, 4793);
+    			add_location(h31, file, 141, 3, 4832);
+    			add_location(b0, file, 142, 6, 4879);
+    			add_location(b1, file, 142, 29, 4902);
+    			add_location(u0, file, 142, 75, 4948);
+    			add_location(i0, file, 142, 114, 4987);
+    			add_location(u1, file, 142, 167, 5040);
+    			add_location(i1, file, 142, 181, 5054);
+    			add_location(i2, file, 142, 201, 5074);
+    			add_location(u2, file, 142, 219, 5092);
+    			add_location(i3, file, 142, 234, 5107);
+    			add_location(p, file, 142, 3, 4876);
+    			attr_dev(textarea, "aria-label", "an input field for your availability");
+    			attr_dev(textarea, "placeholder", "");
+    			attr_dev(textarea, "class", "svelte-n0rlhk");
+    			add_location(textarea, file, 144, 3, 5266);
+    			add_location(br0, file, 145, 3, 5397);
+    			add_location(br1, file, 145, 7, 5401);
+    			attr_dev(input1, "class", "submit svelte-n0rlhk");
     			attr_dev(input1, "type", "button");
     			input1.value = "Submit";
-    			add_location(input1, file, 119, 3, 3743);
-    			add_location(br4, file, 120, 3, 3816);
-    			attr_dev(div0, "class", "input-side svelte-1q0ni7j");
-    			add_location(div0, file, 103, 2, 3065);
-    			add_location(h22, file, 126, 3, 3930);
-    			attr_dev(div1, "class", "top-times-side svelte-1q0ni7j");
-    			add_location(div1, file, 125, 2, 3898);
-    			attr_dev(article, "class", "cf svelte-1q0ni7j");
-    			add_location(article, file, 102, 1, 3042);
-    			attr_dev(main, "class", "svelte-1q0ni7j");
-    			add_location(main, file, 100, 0, 2993);
+    			add_location(input1, file, 146, 3, 5409);
+    			add_location(br2, file, 147, 3, 5482);
+    			attr_dev(div0, "class", "input-side svelte-n0rlhk");
+    			attr_dev(div0, "role", "region");
+    			add_location(div0, file, 137, 2, 4671);
+    			add_location(h22, file, 153, 3, 5619);
+    			attr_dev(div1, "class", "top-times-side svelte-n0rlhk");
+    			attr_dev(div1, "role", "region");
+    			add_location(div1, file, 152, 2, 5573);
+    			attr_dev(div2, "class", "cf svelte-n0rlhk");
+    			add_location(div2, file, 136, 1, 4652);
+    			attr_dev(main, "class", "svelte-n0rlhk");
+    			add_location(main, file, 133, 0, 4549);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -11875,61 +12031,55 @@ var app = (function () {
     			insert_dev(target, main, anchor);
     			append_dev(main, h1);
     			append_dev(main, t1);
-    			append_dev(main, article);
-    			append_dev(article, div0);
-    			append_dev(div0, h20);
-    			append_dev(div0, t3);
+    			append_dev(main, h20);
+    			append_dev(main, t3);
+    			append_dev(main, div2);
+    			append_dev(div2, div0);
+    			append_dev(div0, h21);
+    			append_dev(div0, t5);
+    			append_dev(div0, label);
+    			append_dev(label, h30);
+    			append_dev(div0, t7);
     			append_dev(div0, input0);
     			set_input_value(input0, /*name*/ ctx[1]);
-    			append_dev(div0, t4);
-    			append_dev(div0, h21);
-    			append_dev(div0, t6);
-    			append_dev(div0, h4);
-    			append_dev(h4, b0);
-    			append_dev(h4, t8);
-    			append_dev(h4, b1);
-    			append_dev(h4, t10);
-    			append_dev(div0, t11);
-    			append_dev(div0, p0);
-    			append_dev(p0, t12);
-    			append_dev(p0, u0);
-    			append_dev(p0, t14);
-    			append_dev(p0, i0);
-    			append_dev(p0, t16);
-    			append_dev(p0, br0);
-    			append_dev(p0, t17);
-    			append_dev(p0, br1);
-    			append_dev(p0, t18);
-    			append_dev(p0, u1);
-    			append_dev(p0, t20);
-    			append_dev(p0, i1);
-    			append_dev(p0, t22);
-    			append_dev(p0, i2);
-    			append_dev(p0, t24);
-    			append_dev(p0, u2);
-    			append_dev(p0, t26);
-    			append_dev(p0, i3);
-    			append_dev(p0, t28);
+    			append_dev(div0, t8);
+    			append_dev(div0, h31);
+    			append_dev(div0, t10);
+    			append_dev(div0, p);
+    			append_dev(p, b0);
+    			append_dev(p, t12);
+    			append_dev(p, b1);
+    			append_dev(p, t14);
+    			append_dev(p, u0);
+    			append_dev(p, t16);
+    			append_dev(p, i0);
+    			append_dev(p, t18);
+    			append_dev(p, u1);
+    			append_dev(p, t20);
+    			append_dev(p, i1);
+    			append_dev(p, t22);
+    			append_dev(p, i2);
+    			append_dev(p, t24);
+    			append_dev(p, u2);
+    			append_dev(p, t26);
+    			append_dev(p, i3);
+    			append_dev(p, t28);
     			append_dev(div0, t29);
-    			append_dev(div0, p1);
-    			append_dev(div0, t31);
     			mount_component(voicerecognition, div0, null);
-    			append_dev(div0, t32);
+    			append_dev(div0, t30);
     			append_dev(div0, textarea);
     			set_input_value(textarea, /*text*/ ctx[0]);
+    			append_dev(div0, t31);
+    			append_dev(div0, br0);
+    			append_dev(div0, br1);
+    			append_dev(div0, t32);
+    			append_dev(div0, input1);
     			append_dev(div0, t33);
     			append_dev(div0, br2);
-    			append_dev(div0, br3);
-    			append_dev(div0, t34);
-    			append_dev(div0, input1);
-    			append_dev(div0, t35);
-    			append_dev(div0, br4);
-    			append_dev(div0, t36);
-    			mount_component(table, div0, null);
-    			append_dev(article, t37);
-    			append_dev(article, div1);
+    			append_dev(div2, t34);
+    			append_dev(div2, div1);
     			append_dev(div1, h22);
-    			append_dev(div1, t39);
+    			append_dev(div1, t36);
     			info.block.m(div1, info.anchor = null);
     			info.mount = () => div1;
     			info.anchor = null;
@@ -11967,9 +12117,6 @@ var app = (function () {
     				set_input_value(textarea, /*text*/ ctx[0]);
     			}
 
-    			const table_changes = {};
-    			if (dirty & /*text*/ 1) table_changes.timeArr = makeTimeArr(processText(/*text*/ ctx[0]));
-    			table.$set(table_changes);
     			info.ctx = ctx;
 
     			if (dirty & /*topTimesText*/ 4 && promise !== (promise = /*topTimesText*/ ctx[2]) && handle_promise(promise, info)) ; else {
@@ -11979,18 +12126,15 @@ var app = (function () {
     		i: function intro(local) {
     			if (current) return;
     			transition_in(voicerecognition.$$.fragment, local);
-    			transition_in(table.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(voicerecognition.$$.fragment, local);
-    			transition_out(table.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(main);
     			destroy_component(voicerecognition);
-    			destroy_component(table);
     			info.block.d();
     			info.token = null;
     			info = null;
@@ -12010,26 +12154,6 @@ var app = (function () {
     	return block;
     }
 
-    async function topTimesToText(topIntervalsPromise) {
-    	console.log({ topIntervalsPromise });
-    	let topIntervals = await topIntervalsPromise;
-    	console.log({ topIntervals });
-    	let topTimesText = [];
-
-    	topIntervals.forEach(interval => {
-    		let day = interval['start'][0];
-    		let startMin = interval['start'][2];
-    		let startTime = interval['start'][1] + ':' + (startMin == 0 ? '00' : startMin.toString());
-    		let endMin = interval['end'][2];
-    		let endTime = interval['end'][1] + ':' + (endMin == 0 ? '00' : endMin.toString());
-    		let numUsers = interval['users'].size;
-    		let users = Array.from(interval['users']).join(', ');
-    		topTimesText.push({ day, startTime, endTime, numUsers, users });
-    	});
-
-    	return topTimesText;
-    }
-
     function instance($$self, $$props, $$invalidate) {
     	let timeArr;
     	let { $$slots: slots = {}, $$scope } = $$props;
@@ -12041,14 +12165,79 @@ var app = (function () {
     	let text = '';
     	let availableTimes = null;
     	let API_BASE = 'http://localhost:3001';
-
-    	// localStorage.clear()
     	let topIntervals = getTopNIntervals(getAllUserTimes(true), 5);
-
+    	console.log(topIntervals);
     	getTimes();
 
     	// Concepts incorporated: Rendering Times
     	let topTimesText = topTimesToText(topIntervals);
+
+    	async function topTimesToText(topIntervalsPromise) {
+    		console.log({ topIntervalsPromise });
+    		let topIntervals = await topIntervalsPromise;
+    		console.log({ topIntervals });
+    		let topTimesText = [];
+
+    		topIntervals.forEach(interval => {
+    			let day = interval['start'][0];
+    			let startMin = interval['start'][2];
+    			let startMeridiem = 'am';
+
+    			if (interval['start'][1] > 12) {
+    				interval['start'][1] -= 12;
+    				startMeridiem = 'pm';
+    			}
+
+    			let startTime = interval['start'][1] + ':' + (startMin == 0 ? '00' : startMin.toString()) + startMeridiem;
+    			let endMin = interval['end'][2];
+    			let endMeridiem = 'am';
+
+    			if (interval['end'][1] > 12) {
+    				interval['end'][1] -= 12;
+    				endMeridiem = 'pm';
+    			}
+
+    			let endTime = interval['end'][1] + ':' + (endMin == 0 ? '00' : endMin.toString()) + endMeridiem;
+
+    			// Currently incorrect, but user does not see. The current day's month/day for setting up a datetime are eventually discarded in the display and only the hours/minutes are accurate
+    			let currentDate = new Date();
+
+    			// Also incorrect in that doesn't support timezones (beyond Boston/NY GMT-5)
+    			// subtract 5 because dateTime is in local time zone GMT-5 where i'm coding, but eventually toISOString changes it to UTC time zone
+    			let startDateTime = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDay(), interval['start'][1] - 5, interval['start'][2]);
+
+    			let endDateTime = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDay(), interval['end'][1] - 5, interval['end'][2]);
+    			startDateTime = startDateTime.toISOString();
+    			endDateTime = endDateTime.toISOString();
+    			let numUsers = interval['users'].size;
+    			let users = Array.from(interval['users']).join(', ');
+
+    			let accessibleStartDate = accessibleDate(startDateTime, {
+    				format: `H MM m to `,
+    				language: `en`,
+    				military: false
+    			});
+
+    			let accessibleEndDate = accessibleDate(endDateTime, {
+    				format: `H MM m`,
+    				language: `en`,
+    				military: false
+    			});
+
+    			let accessibleTime = dayArr[day] + " " + accessibleStartDate + " " + accessibleEndDate;
+
+    			topTimesText.push({
+    				day,
+    				startTime,
+    				endTime,
+    				numUsers,
+    				users,
+    				accessibleTime
+    			});
+    		});
+
+    		return topTimesText;
+    	}
 
     	// Concepts incorporated: Time Text Description
     	function handleInput() {
@@ -12145,6 +12334,7 @@ var app = (function () {
     		text,
     		availableTimes,
     		API_BASE,
+    		accessibleDate,
     		topIntervals,
     		topTimesText,
     		topTimesToText,
