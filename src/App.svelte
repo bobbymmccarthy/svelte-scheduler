@@ -8,7 +8,7 @@
 	let name = '';
 	let text = '';
 	let availableTimes = null;
-	let API_BASE = 'https://when2speech-server.herokuapp.com';
+	let API_BASE = 'http://localhost:3001';
 	import accessibleDate from 'accessible-date';
 
 	let topIntervals = getTopNIntervals(getAllUserTimes(true), 5);
